@@ -17,12 +17,12 @@ class Category extends Model
 
     protected $fillable = [
         'category',
-        'slug',
+        'slug'
     ];
 
     public function news(): HasMany
     {
-        return $this->hasMany(News::class);
+        return $this->hasMany(News::class, 'category_id');
     }
 
     public function sluggable(): array

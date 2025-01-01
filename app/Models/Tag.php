@@ -17,12 +17,12 @@ class Tag extends Model
 
     protected $fillable = [
         'tag',
-        'slug',
+        'slug'
     ];
 
     public function news_tags(): HasMany
     {
-        return $this->hasMany(NewsTag::class);
+        return $this->hasMany(NewsTag::class, 'tag_id');
     }
 
     public function sluggable(): array
