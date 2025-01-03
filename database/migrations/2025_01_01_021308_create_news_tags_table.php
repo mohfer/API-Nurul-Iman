@@ -12,13 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('news_tags', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('news_id');
-            $table->unsignedBigInteger('tag_id');
+            $table->uuid('id')->primary();
+            $table->foreignUuid('news_id')->references('id')->on('news')->onDelete('cascade');
+            $table->foreignUuid('tag_id')->references('id')->on('tags')->onDelete('cascade');
             $table->timestamps();
 
-            $table->foreign('news_id')->references('id')->on('news')->onDelete('cascade');
-            $table->foreign('tag_id')->references('id')->on('tags')->onDelete('cascade');
+            $table->index(['news_id', 'tag_id']);
         });
     }
 

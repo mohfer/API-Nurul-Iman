@@ -12,12 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('galleries', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('title');
+            $table->string('slug')->unique();
             $table->string('image_url');
             $table->string('description');
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index(['title', 'slug']);
         });
     }
 

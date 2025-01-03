@@ -6,13 +6,14 @@ use App\Models\News;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Cviebrock\EloquentSluggable\Sluggable;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Category extends Model
 {
-    use Sluggable, LogsActivity, SoftDeletes;
+    use Sluggable, LogsActivity, SoftDeletes, HasUuids;
 
     protected $table = 'categories';
 
@@ -38,6 +39,9 @@ class Category extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['category', 'slug']);
+            ->useLogName('category')
+            ->logOnly(['category'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 }

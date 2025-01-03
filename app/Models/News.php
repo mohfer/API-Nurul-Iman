@@ -8,6 +8,7 @@ use App\Models\Category;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Cviebrock\EloquentSluggable\Sluggable;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class News extends Model
 {
-    use Sluggable, LogsActivity, SoftDeletes;
+    use Sluggable, LogsActivity, SoftDeletes, HasUuids;
 
     protected $table = 'news';
 
@@ -57,15 +58,17 @@ class News extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
+            ->useLogName('news')
             ->logOnly([
                 'title',
-                'slug',
                 'thumbnail',
                 'content',
-                'user_id',
-                'category_id',
+                'user.name',
+                'category.category',
                 'is_published',
                 'published_at'
-            ]);
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 }

@@ -12,11 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tags', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('tag')->unique();
             $table->string('slug')->unique();
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index(['tag', 'slug']);
         });
     }
 

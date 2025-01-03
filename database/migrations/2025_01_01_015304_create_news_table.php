@@ -12,20 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('news', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('title');
             $table->string('slug')->unique();
             $table->string('thumbnail');
             $table->string('content');
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('category_id');
+            $table->foreignUuid('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignUuid('category_id')->references('id')->on('categories')->onDelete('cascade');
             $table->string('is_published');
             $table->dateTime('published_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
-            
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
+
+            $table->index(['title', 'slug']);
         });
     }
 

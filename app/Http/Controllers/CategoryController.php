@@ -46,9 +46,9 @@ class CategoryController
         return $this->sendResponse($data, 'Category created successfully', 201);
     }
 
-    public function show(Request $request)
+    public function show($id)
     {
-        $category = Category::where('slug', $request->slug)->first();
+        $category = Category::find($id);
 
         if (!$category) {
             return $this->sendError('Category not found', 404);
@@ -63,9 +63,9 @@ class CategoryController
         return $this->sendResponse($data, 'Category fetched successfully');
     }
 
-    public function update(Request $request)
+    public function update(Request $request, $id)
     {
-        $category = Category::where('slug', $request->slug)->first();
+        $category = Category::find($id);
 
         if (!$category) {
             return $this->sendError('Category not found', 404);
@@ -90,9 +90,9 @@ class CategoryController
         return $this->sendResponse($data, 'Category updated successfully');
     }
 
-    public function destroy(Request $request)
+    public function destroy($id)
     {
-        $category = Category::where('slug', $request->slug)->first();
+        $category = Category::find($id);
 
         if (!$category) {
             return $this->sendError('Category not found', 404);
@@ -107,14 +107,21 @@ class CategoryController
 
     public function trashed()
     {
-        $categories = Category::onlyTrashed()->get();
+        $categories = Category::onlyTrashed()->get()
+            ->map(function ($category) {
+                return [
+                    'id' => $category->id,
+                    'category' => $category->category,
+                    'slug' => $category->slug
+                ];
+            });
 
         return $this->sendResponse($categories, 'Category fetched successfully');
     }
 
-    public function restore(Request $request)
+    public function restore($id)
     {
-        $category = Category::withTrashed()->where('slug', $request->slug)->first();
+        $category = Category::onlyTrashed()->where('id', $id)->first();
 
         if (!$category) {
             return $this->sendError('Category not found', 404);
@@ -127,9 +134,9 @@ class CategoryController
         return $this->sendResponse(null, 'Category restored successfully');
     }
 
-    public function forceDelete(Request $request)
+    public function forceDelete($id)
     {
-        $category = Category::withTrashed()->where('slug', $request->slug)->first();
+        $category = Category::onlyTrashed()->where('id', $id)->first();
 
         if (!$category) {
             return $this->sendError('Category not found', 404);

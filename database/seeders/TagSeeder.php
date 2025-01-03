@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Tag;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class TagSeeder extends Seeder
@@ -14,7 +13,38 @@ class TagSeeder extends Seeder
     public function run(): void
     {
         $tags = [
-
+            'Pengumuman',
+            'Ekstrakurikuler',
+            'Lomba',
+            'Prestasi',
+            'Akademik',
+            'OSIS',
+            'Guru',
+            'Siswa',
+            'PPDB',
+            'Beasiswa',
+            'Libur',
+            'Seminar',
+            'Workshop',
+            'Kesehatan',
+            'Keamanan',
+            'Kerja Sama',
+            'Infrastruktur',
+            'Kegiatan Sosial',
+            'Study Tour',
+            'Hari Nasional',
+            'Kompetisi',
+            'Alumni',
+            'Pendidikan',
+            'Pelatihan',
+            'Festival',
+            'Seni',
+            'Olahraga',
+            'Bakti Sosial',
+            'Lingkungan',
+            'Teknologi',
+            'Inovasi',
+            'Peningkatan Mutu',
         ];
 
         foreach ($tags as $tag) {

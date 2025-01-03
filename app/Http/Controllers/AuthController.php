@@ -44,7 +44,7 @@ class AuthController
                 ->event('login')
                 ->log('user logged in');
 
-            return $this->sendResponse($data, 'Login successful');
+            return $this->sendResponse($data, 'User logged in successfully');
         }
 
         return $this->sendError('Invalid credentials', 401);

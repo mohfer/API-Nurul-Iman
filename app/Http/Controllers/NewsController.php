@@ -59,8 +59,8 @@ class NewsController
             'title' => 'required|string',
             'thumbnail' => 'required|image',
             'content' => 'required|string',
-            'user_id' => 'required|integer',
-            'category_id' => 'required|integer',
+            'user_id' => 'required|string',
+            'category_id' => 'required|string',
             'is_published' => 'required|boolean'
         ]);
 
@@ -96,7 +96,7 @@ class NewsController
 
     public function published(Request $request)
     {
-        $news = News::where('slug', $request->slug)->first();
+        $news = News::where('id', $request->id)->first();
 
         if (!$news) {
             return $this->sendError('News not found', 404);
@@ -106,7 +106,7 @@ class NewsController
             'title' => 'required|string',
             'thumbnail' => 'required|image',
             'content' => 'required|string',
-            'category_id' => 'required|integer',
+            'category_id' => 'required|string',
             'is_published' => 'required|boolean'
         ]);
 
@@ -128,24 +128,25 @@ class NewsController
         return $this->sendResponse($data, 'News successfully published');
     }
 
-    public function showNewsByAuthor(Request $request)
+    public function showByAuthor(Request $request)
     {
         //
     }
 
-    public function showNewsByCategory(Request $request)
+    public function showByCategory(Request $request)
     {
-        $category = Category::where('slug', $request->slug)->first();
-        $news = News::where('category_id', $category->id)->get();
-        $newsTags = NewsTag::with('tag')->where('news_id', $news->id)->get();
-        $newsDetails = News::with('user', 'category')->where('category_id', $category->id)->where('is_published', true)->get();
+        $category = Category::with(['news.news_tags.tag', 'news.user', 'news.category'])->where('slug', $request->slug)->first();
+        $news = $category->news;
+        $newsTags = $news->pluck('news_tags')->flatten();
+        $newsDetails = $news->where('is_published', true);
 
-        if (!$news) {
+        if (!$newsDetails) {
             return $this->sendError('News with category ' . $category->name . ' not found', 404);
         }
 
+        $tags = [];
         foreach ($newsTags as $newsTag) {
-            $tags = [
+            $tags[] = [
                 'id' => $newsTag->tag->id,
                 'tag' => $newsTag->tag->tag,
                 'slug' => $newsTag->tag->slug
@@ -165,7 +166,7 @@ class NewsController
         return $this->sendResponse($data, 'News fetched successfully');
     }
 
-    public function ShowNewsByTag(Request $request)
+    public function showByTag(Request $request)
     {
         //
     }

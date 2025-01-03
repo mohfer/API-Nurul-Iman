@@ -46,9 +46,9 @@ class TagController
         return $this->sendResponse($data, 'Tag created successfully', 201);
     }
 
-    public function show(Request $request)
+    public function show($id)
     {
-        $tag = Tag::where('slug', $request->slug)->first();
+        $tag = Tag::find($id);
 
         if (!$tag) {
             return $this->sendError('Tag not found', 404);
@@ -63,9 +63,9 @@ class TagController
         return $this->sendResponse($data, 'Tag fetched successfully');
     }
 
-    public function update(Request $request)
+    public function update(Request $request, $id)
     {
-        $tag = Tag::where('slug', $request->slug)->first();
+        $tag = Tag::find($id);
 
         if (!$tag) {
             return $this->sendError('Tag not found', 404);
@@ -90,9 +90,9 @@ class TagController
         return $this->sendResponse($data, 'Tag updated successfully');
     }
 
-    public function destroy(Request $request)
+    public function destroy($id)
     {
-        $tag = Tag::where('slug', $request->slug)->first();
+        $tag = Tag::find($id);
 
         if (!$tag) {
             return $this->sendError('Tag not found', 404);
@@ -107,14 +107,21 @@ class TagController
 
     public function trashed()
     {
-        $tags = Tag::onlyTrashed()->get();
+        $tags = Tag::onlyTrashed()->get()
+            ->map(function ($tag) {
+                return [
+                    'id' => $tag->id,
+                    'tag' => $tag->tag,
+                    'slug' => $tag->slug
+                ];
+            });
 
         return $this->sendResponse($tags, 'Tag fetched successfully');
     }
 
-    public function restore(Request $request)
+    public function restore($id)
     {
-        $tag = Tag::withTrashed()->where('slug', $request->slug)->first();
+        $tag = Tag::onlyTrashed()->where('id', $id)->first();
 
         if (!$tag) {
             return $this->sendError('Tag not found', 404);
@@ -127,9 +134,9 @@ class TagController
         return $this->sendResponse(null, 'Tag restored successfully');
     }
 
-    public function forceDelete(Request $request)
+    public function forceDelete($id)
     {
-        $tag = Tag::withTrashed()->where('slug', $request->slug)->first();
+        $tag = Tag::onlyTrashed()->where('id', $id)->first();
 
         if (!$tag) {
             return $this->sendError('Tag not found', 404);
