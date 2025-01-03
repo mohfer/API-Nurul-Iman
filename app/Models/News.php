@@ -5,14 +5,17 @@ namespace App\Models;
 use App\Models\User;
 use App\Models\NewsTag;
 use App\Models\Category;
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Cviebrock\EloquentSluggable\Sluggable;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class News extends Model
 {
-    use Sluggable;
+    use Sluggable, LogsActivity, SoftDeletes;
 
     protected $table = 'news';
 
@@ -49,5 +52,20 @@ class News extends Model
                 'source' => 'title'
             ]
         ];
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'title',
+                'slug',
+                'thumbnail',
+                'content',
+                'user_id',
+                'category_id',
+                'is_published',
+                'published_at'
+            ]);
     }
 }

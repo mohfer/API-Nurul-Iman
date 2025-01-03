@@ -9,8 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class NewsTag extends Model
 {
-    public $timestamps = false;
-
     protected $table = 'news_tags';
 
     protected $fillable = [

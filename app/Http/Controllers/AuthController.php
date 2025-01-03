@@ -6,7 +6,7 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class AuthController extends Controller
+class AuthController
 {
     use ApiResponse;
 
@@ -15,7 +15,7 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|min:8',
-            'remember_me' => 'boolean'
+            'remember_me' => 'required|boolean'
         ]);
 
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
@@ -27,15 +27,11 @@ class AuthController extends Controller
                 'email' => $user->email
             ];
 
-            activity()
-                ->event('login')
-                ->log('User logged in');
-
             if ($request->remember_me) {
                 $token = $user->createToken('auth_token', ['*'], now()->addWeeks(1))->plainTextToken;
-            } else {
-                $token = $user->createToken('auth_token', ['*'], now()->addHours(1))->plainTextToken;
             }
+
+            $token = $user->createToken('auth_token', ['*'], now()->addHours(1))->plainTextToken;
 
             $data = [
                 'token' => $token,
@@ -43,6 +39,10 @@ class AuthController extends Controller
                 'roles' => $user->getRoleNames(),
                 'permissions' => $user->getAllPermissions()->pluck('name')
             ];
+
+            activity('auth')
+                ->event('login')
+                ->log('user logged in');
 
             return $this->sendResponse($data, 'Login successful');
         }
@@ -52,11 +52,11 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        activity()
-            ->event('logout')
-            ->log('User logged out');
-
         $request->user()->currentAccessToken()->delete();
+
+        activity('auth')
+            ->event('logout')
+            ->log('user logged out');
 
         return $this->sendResponse(null, 'User logged out successfully');
     }

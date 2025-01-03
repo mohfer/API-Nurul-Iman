@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('tag')->unique();
             $table->string('slug')->unique();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
