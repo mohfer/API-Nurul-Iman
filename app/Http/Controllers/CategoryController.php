@@ -166,7 +166,7 @@ class CategoryController
 
     public function search(Request $request)
     {
-        if (!$request->q) {
+        if (!$request->has('q') || empty($request->q)) {
             $cached = Redis::get('categories.index');
 
             if ($cached) {
@@ -177,12 +177,16 @@ class CategoryController
             $categories = Category::select(['id', 'category', 'slug'])->get();
 
             Redis::setex('categories.index', 3600, json_encode($categories));
+
+            return $this->sendResponse($categories, 'Categories fetched successfully');
         }
 
-        $categories = Category::where('category', 'like', '%' . $request->q . '%')->select(['id', 'category', 'slug'])->get();
+        $categories = Category::where('category', 'like', '%' . $request->q . '%')
+            ->select(['id', 'category', 'slug'])
+            ->get();
 
-        if (!$categories) {
-            return $this->sendError('Categories not found', 404);
+        if ($categories->isEmpty()) {
+            return $this->sendError('No categories found matching your query', 404);
         }
 
         return $this->sendResponse($categories, 'Categories fetched successfully');

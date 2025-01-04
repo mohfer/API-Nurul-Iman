@@ -166,7 +166,7 @@ class TagController
 
     public function search(Request $request)
     {
-        if (!$request->q) {
+        if (!$request->has('q') || empty($request->q)) {
             $cached = Redis::get('tags.index');
 
             if ($cached) {
@@ -177,12 +177,16 @@ class TagController
             $tags = Tag::select(['id', 'tag', 'slug'])->get();
 
             Redis::setex('tags.index', 3600, json_encode($tags));
+
+            return $this->sendResponse($tags, 'Tags fetched successfully');
         }
 
-        $tags = Tag::where('tag', 'like', '%' . $request->q . '%')->select(['id', 'tag', 'slug'])->get();
+        $tags = Tag::where('tag', 'like', '%' . $request->q . '%')
+            ->select(['id', 'tag', 'slug'])
+            ->get();
 
-        if (!$tags) {
-            return $this->sendError('Tags not found', 404);
+        if ($tags->isEmpty()) {
+            return $this->sendError('No tags found matching your query', 404);
         }
 
         return $this->sendResponse($tags, 'Tags fetched successfully');
