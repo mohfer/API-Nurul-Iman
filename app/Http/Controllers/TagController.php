@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Tag;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Spatie\Activitylog\Models\Activity;
 
 class TagController
@@ -13,14 +14,16 @@ class TagController
 
     public function index()
     {
-        $tags = Tag::all()
-            ->map(function ($tag) {
-                return [
-                    'id' => $tag->id,
-                    'tag' => $tag->tag,
-                    'slug' => $tag->slug
-                ];
-            });
+        $cached = Redis::get('tags.index');
+
+        if ($cached) {
+            $tags = json_decode($cached);
+            return $this->sendResponse($tags, 'Tag fetched successfully from cache');
+        }
+
+        $tags = Tag::select(['id', 'tag', 'slug'])->get();
+
+        Redis::setex('tags.index', 3600, json_encode($tags));
 
         return $this->sendResponse($tags, 'Tag fetched successfully');
     }
@@ -35,13 +38,11 @@ class TagController
             'tag' => $request->tag
         ]);
 
-        $data = [
-            'id' => $tag->id,
-            'tag' => $tag->tag,
-            'slug' => $tag->slug
-        ];
+        $data = array_merge(['id' => $tag->id], $tag->only($tag->getFillable()));
 
         Activity::all()->last();
+
+        Redis::del('tags.index');
 
         return $this->sendResponse($data, 'Tag created successfully', 201);
     }
@@ -54,11 +55,7 @@ class TagController
             return $this->sendError('Tag not found', 404);
         }
 
-        $data = [
-            'id' => $tag->id,
-            'tag' => $tag->tag,
-            'slug' => $tag->slug
-        ];
+        $data = array_merge(['id' => $tag->id], $tag->only($tag->getFillable()));
 
         return $this->sendResponse($data, 'Tag fetched successfully');
     }
@@ -79,13 +76,11 @@ class TagController
         $tag->tag = $request->tag;
         $tag->save();
 
-        $data = [
-            'id' => $tag->id,
-            'tag' => $tag->tag,
-            'slug' => $tag->slug
-        ];
+        $data = array_merge(['id' => $tag->id], $tag->only($tag->getFillable()));
 
         Activity::all()->last();
+
+        Redis::del('tags.index');
 
         return $this->sendResponse($data, 'Tag updated successfully');
     }
@@ -100,21 +95,30 @@ class TagController
 
         $tag->delete();
 
+        $data = array_merge(['id' => $tag->id], $tag->only($tag->getFillable()));
+
         Activity::all()->last();
 
-        return $this->sendResponse(null, 'Tag deleted successfully');
+        Redis::pipeline(function ($pipe) {
+            $pipe->del('tags.index');
+            $pipe->del('tags.trashed');
+        });
+
+        return $this->sendResponse($data, 'Tag deleted successfully');
     }
 
     public function trashed()
     {
-        $tags = Tag::onlyTrashed()->get()
-            ->map(function ($tag) {
-                return [
-                    'id' => $tag->id,
-                    'tag' => $tag->tag,
-                    'slug' => $tag->slug
-                ];
-            });
+        $cached = Redis::get('tags.trashed');
+
+        if ($cached) {
+            $tags = json_decode($cached);
+            return $this->sendResponse($tags, 'Tag fetched successfully from cache');
+        }
+
+        $tags = Tag::onlyTrashed()->select(['id', 'tag', 'slug'])->get();
+
+        Redis::setex('tags.trashed', 3600, json_encode($tags));
 
         return $this->sendResponse($tags, 'Tag fetched successfully');
     }
@@ -129,9 +133,16 @@ class TagController
 
         $tag->restore();
 
+        $data = array_merge(['id' => $tag->id], $tag->only($tag->getFillable()));
+
         Activity::all()->last();
 
-        return $this->sendResponse(null, 'Tag restored successfully');
+        Redis::pipeline(function ($pipe) {
+            $pipe->del('tags.index');
+            $pipe->del('tags.trashed');
+        });
+
+        return $this->sendResponse($data, 'Tag restored successfully');
     }
 
     public function forceDelete($id)
@@ -144,8 +155,36 @@ class TagController
 
         $tag->forceDelete();
 
+        $data = array_merge(['id' => $tag->id], $tag->only($tag->getFillable()));
+
         Activity::all()->last();
 
-        return $this->sendResponse(null, 'Tag deleted permanently');
+        Redis::del('tags.trashed');
+
+        return $this->sendResponse($data, 'Tag deleted permanently');
+    }
+
+    public function search(Request $request)
+    {
+        if (!$request->q) {
+            $cached = Redis::get('tags.index');
+
+            if ($cached) {
+                $tags = json_decode($cached);
+                return $this->sendResponse($tags, 'Tags fetched successfully from cache');
+            }
+
+            $tags = Tag::select(['id', 'tag', 'slug'])->get();
+
+            Redis::setex('tags.index', 3600, json_encode($tags));
+        }
+
+        $tags = Tag::where('tag', 'like', '%' . $request->q . '%')->select(['id', 'tag', 'slug'])->get();
+
+        if (!$tags) {
+            return $this->sendError('Tags not found', 404);
+        }
+
+        return $this->sendResponse($tags, 'Tags fetched successfully');
     }
 }

@@ -24,7 +24,8 @@ class PermissionSeeder extends Seeder
             'news-tag',
             'tag',
             'gallery',
-            'role'
+            'role',
+            'log'
         ];
 
         $roles = [
@@ -42,7 +43,7 @@ class PermissionSeeder extends Seeder
 
         foreach ($permissions as $permission) {
             foreach ($actions as $action) {
-                Permission::create(['name' => $permission . '-' . $action]);
+                Permission::create(['name' => $permission . '.' . $action]);
             }
         }
 
@@ -55,13 +56,12 @@ class PermissionSeeder extends Seeder
         $writer = Role::findByName('Writer');
 
         $superAdmin->givePermissionTo(Permission::all());
-        $adminPermissions = Permission::whereNotIn('name', ['role-create', 'role-read', 'role-update', 'role-delete'])->get();
+        $adminPermissions = Permission::whereNotIn('name', ['role.create', 'role.read', 'role.update', 'role.delete'])->get();
         $admin->givePermissionTo($adminPermissions);
-        $writer->givePermissionTo('news-create', 'news-read', 'news-update', 'news-delete');
+        $writer->givePermissionTo('news.create', 'news.read', 'news.update', 'news.delete');
 
         User::create([
             'name' => 'Super Admin',
-            'slug' => 'super-admin',
             'email' => 'super@admin.com',
             'password' => bcrypt('password')
         ])->assignRole('Super Admin');

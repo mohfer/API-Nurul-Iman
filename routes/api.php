@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\TagController;
 
@@ -18,13 +19,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('categories/trashed', [CategoryController::class, 'trashed']);
     Route::put('categories/trashed/{id}', [CategoryController::class, 'restore']);
     Route::delete('categories/trashed/{id}', [CategoryController::class, 'forceDelete']);
+    Route::get('categories/search', [CategoryController::class, 'search']);
     Route::resource('categories', CategoryController::class);
-
+    
     // Tag Endpoint
     Route::get('tags/trashed', [TagController::class, 'trashed']);
     Route::put('tags/trashed/{id}', [TagController::class, 'restore']);
     Route::delete('tags/trashed/{id}', [TagController::class, 'forceDelete']);
+    Route::get('tags/search', [TagController::class, 'search']);
     Route::resource('tags', TagController::class);
+
+    // Gallery Endpoint
+    Route::resource('galleries', GalleryController::class);
 
     // News Endpoint
     Route::get('news/trashed', [NewsController::class, 'trashed']);

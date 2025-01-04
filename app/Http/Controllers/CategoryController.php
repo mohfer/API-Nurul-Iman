@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Spatie\Activitylog\Models\Activity;
 
 class CategoryController
@@ -13,14 +14,16 @@ class CategoryController
 
     public function index()
     {
-        $categories = Category::all()
-            ->map(function ($category) {
-                return [
-                    'id' => $category->id,
-                    'category' => $category->category,
-                    'slug' => $category->slug
-                ];
-            });
+        $cached = Redis::get('categories.index');
+
+        if ($cached) {
+            $categories = json_decode($cached);
+            return $this->sendResponse($categories, 'Category fetched successfully from cache');
+        }
+
+        $categories = Category::select(['id', 'category', 'slug'])->get();
+
+        Redis::setex('categories.index', 3600, json_encode($categories));
 
         return $this->sendResponse($categories, 'Category fetched successfully');
     }
@@ -35,13 +38,11 @@ class CategoryController
             'category' => $request->category
         ]);
 
-        $data = [
-            'id' => $category->id,
-            'category' => $category->category,
-            'slug' => $category->slug
-        ];
+        $data = array_merge(['id' => $category->id], $category->only($category->getFillable()));
 
         Activity::all()->last();
+
+        Redis::del('categories.index');
 
         return $this->sendResponse($data, 'Category created successfully', 201);
     }
@@ -54,11 +55,7 @@ class CategoryController
             return $this->sendError('Category not found', 404);
         }
 
-        $data = [
-            'id' => $category->id,
-            'category' => $category->category,
-            'slug' => $category->slug
-        ];
+        $data = array_merge(['id' => $category->id], $category->only($category->getFillable()));
 
         return $this->sendResponse($data, 'Category fetched successfully');
     }
@@ -79,13 +76,11 @@ class CategoryController
         $category->category = $request->category;
         $category->save();
 
-        $data = [
-            'id' => $category->id,
-            'category' => $category->category,
-            'slug' => $category->slug
-        ];
+        $data = array_merge(['id' => $category->id], $category->only($category->getFillable()));
 
         Activity::all()->last();
+
+        Redis::del('categories.index');
 
         return $this->sendResponse($data, 'Category updated successfully');
     }
@@ -100,21 +95,30 @@ class CategoryController
 
         $category->delete();
 
+        $data = array_merge(['id' => $category->id], $category->only($category->getFillable()));
+
         Activity::all()->last();
 
-        return $this->sendResponse(null, 'Category deleted successfully');
+        Redis::pipeline(function ($pipe) {
+            $pipe->del('categories.index');
+            $pipe->del('categories.trashed');
+        });
+
+        return $this->sendResponse($data, 'Category deleted successfully');
     }
 
     public function trashed()
     {
-        $categories = Category::onlyTrashed()->get()
-            ->map(function ($category) {
-                return [
-                    'id' => $category->id,
-                    'category' => $category->category,
-                    'slug' => $category->slug
-                ];
-            });
+        $cached = Redis::get('categories.trashed');
+
+        if ($cached) {
+            $categories = json_decode($cached);
+            return $this->sendResponse($categories, 'Category fetched successfully from cache');
+        }
+
+        $categories = Category::onlyTrashed()->select(['id', 'category', 'slug'])->get();
+
+        Redis::setex('categories.trashed', 3600, json_encode($categories));
 
         return $this->sendResponse($categories, 'Category fetched successfully');
     }
@@ -129,9 +133,16 @@ class CategoryController
 
         $category->restore();
 
+        $data = array_merge(['id' => $category->id], $category->only($category->getFillable()));
+
         Activity::all()->last();
 
-        return $this->sendResponse(null, 'Category restored successfully');
+        Redis::pipeline(function ($pipe) {
+            $pipe->del('categories.index');
+            $pipe->del('categories.trashed');
+        });
+
+        return $this->sendResponse($data, 'Category restored successfully');
     }
 
     public function forceDelete($id)
@@ -144,8 +155,36 @@ class CategoryController
 
         $category->forceDelete();
 
+        $data = array_merge(['id' => $category->id], $category->only($category->getFillable()));
+
         Activity::all()->last();
 
-        return $this->sendResponse(null, 'Category deleted permanently');
+        Redis::del('categories.trashed');
+
+        return $this->sendResponse($data, 'Category deleted permanently');
+    }
+
+    public function search(Request $request)
+    {
+        if (!$request->q) {
+            $cached = Redis::get('categories.index');
+
+            if ($cached) {
+                $categories = json_decode($cached);
+                return $this->sendResponse($categories, 'Categories fetched successfully from cache');
+            }
+
+            $categories = Category::select(['id', 'category', 'slug'])->get();
+
+            Redis::setex('categories.index', 3600, json_encode($categories));
+        }
+
+        $categories = Category::where('category', 'like', '%' . $request->q . '%')->select(['id', 'category', 'slug'])->get();
+
+        if (!$categories) {
+            return $this->sendError('Categories not found', 404);
+        }
+
+        return $this->sendResponse($categories, 'Categories fetched successfully');
     }
 }

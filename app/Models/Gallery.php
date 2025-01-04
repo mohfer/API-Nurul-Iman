@@ -23,7 +23,7 @@ class Gallery extends Model
     {
         return LogOptions::defaults()
             ->useLogName('gallery')
-            ->logOnly(['title', 'image_url', 'description'])
+            ->logOnly(['title', 'description'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }
