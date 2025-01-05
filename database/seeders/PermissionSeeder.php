@@ -25,7 +25,7 @@ class PermissionSeeder extends Seeder
             'tag',
             'gallery',
             'role',
-            'log'
+            'permission'
         ];
 
         $roles = [
@@ -41,11 +41,33 @@ class PermissionSeeder extends Seeder
             'delete'
         ];
 
+        $customPermissions = [
+            'category',
+            'news',
+            'user',
+            'tag',
+            'gallery',
+        ];
+
+        $customActions = [
+            'trashed',
+            'restore',
+            'forceDelete'
+        ];
+
         foreach ($permissions as $permission) {
             foreach ($actions as $action) {
                 Permission::create(['name' => $permission . '.' . $action]);
             }
         }
+
+        foreach ($customPermissions as $customPermission) {
+            foreach ($customActions as $customAction) {
+                Permission::create(['name' => $customPermission . '.' . $customAction]);
+            }
+        }
+
+        Permission::create(['name' => 'log.read']);
 
         foreach ($roles as $role) {
             Role::create(['name' => $role]);
@@ -56,7 +78,13 @@ class PermissionSeeder extends Seeder
         $writer = Role::findByName('Writer');
 
         $superAdmin->givePermissionTo(Permission::all());
-        $adminPermissions = Permission::whereNotIn('name', ['role.create', 'role.read', 'role.update', 'role.delete'])->get();
+        $adminPermissions = Permission::whereNotIn('name', [
+            'role.create',
+            'role.read',
+            'role.update',
+            'role.delete',
+            'log.read'
+        ])->get();
         $admin->givePermissionTo($adminPermissions);
         $writer->givePermissionTo('news.create', 'news.read', 'news.update', 'news.delete');
 

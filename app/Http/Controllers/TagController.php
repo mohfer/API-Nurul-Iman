@@ -23,6 +23,10 @@ class TagController
 
         $tags = Tag::select(['id', 'tag', 'slug'])->get();
 
+        if ($tags->isEmpty()) {
+            return $this->sendError('No tags found', 404);
+        }
+
         Redis::setex('tags.index', 3600, json_encode($tags));
 
         return $this->sendResponse($tags, 'Tag fetched successfully');
@@ -118,6 +122,10 @@ class TagController
 
         $tags = Tag::onlyTrashed()->select(['id', 'tag', 'slug'])->get();
 
+        if ($tags->isEmpty()) {
+            return $this->sendError('No tags found', 404);
+        }
+
         Redis::setex('tags.trashed', 3600, json_encode($tags));
 
         return $this->sendResponse($tags, 'Tag fetched successfully');
@@ -175,6 +183,10 @@ class TagController
             }
 
             $tags = Tag::select(['id', 'tag', 'slug'])->get();
+
+            if ($tags->isEmpty()) {
+                return $this->sendError('No tags found', 404);
+            }
 
             Redis::setex('tags.index', 3600, json_encode($tags));
 

@@ -23,6 +23,10 @@ class CategoryController
 
         $categories = Category::select(['id', 'category', 'slug'])->get();
 
+        if ($categories->isEmpty()) {
+            return $this->sendError('No categories found', 404);
+        }
+
         Redis::setex('categories.index', 3600, json_encode($categories));
 
         return $this->sendResponse($categories, 'Category fetched successfully');
@@ -118,6 +122,10 @@ class CategoryController
 
         $categories = Category::onlyTrashed()->select(['id', 'category', 'slug'])->get();
 
+        if ($categories->isEmpty()) {
+            return $this->sendError('No categories found', 404);
+        }
+
         Redis::setex('categories.trashed', 3600, json_encode($categories));
 
         return $this->sendResponse($categories, 'Category fetched successfully');
@@ -175,6 +183,10 @@ class CategoryController
             }
 
             $categories = Category::select(['id', 'category', 'slug'])->get();
+
+            if ($categories->isEmpty()) {
+                return $this->sendError('No categories found', 404);
+            }
 
             Redis::setex('categories.index', 3600, json_encode($categories));
 
