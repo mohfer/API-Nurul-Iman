@@ -1,14 +1,26 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\GalleryController;
-use App\Http\Controllers\NewsController;
 use App\Http\Controllers\TagController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NewsController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\GalleryController;
+use App\Http\Controllers\CategoryController;
 
 // Public Endpoint
-Route::post('/auth/login', [AuthController::class, 'login']);
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verificationEmail'])->middleware(['signed'])->name('verification.verify');
+        Route::post('/email/verification-notification', [AuthController::class, 'resendVerificationEmail'])->middleware(['throttle:6,1'])->name('verification.send');
+        Route::post('/change-password', [AuthController::class, 'changePassword']);
+    });
+
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('guest')->name('password.email');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('guest')->name('password.update');
+});
 
 Route::prefix('news')->group(function () {
     Route::get('/author/{slug}', [NewsController::class, 'showByAuthor']);
@@ -16,7 +28,22 @@ Route::prefix('news')->group(function () {
     Route::get('/tag/{slug}', [NewsController::class, 'showByTag']);
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum', 'verified')->group(function () {
+
+    // User Endpoint
+    Route::prefix('users')->group(function () {
+        Route::prefix('trashed')->group(function () {
+            Route::get('/', [UserController::class, 'trashed'])->middleware('permission:user.trashed');
+            Route::put('/{id}', [UserController::class, 'restore'])->middleware('permission:user.restore');
+            Route::delete('/{id}', [UserController::class, 'forceDelete'])->middleware('permission:user.forceDelete');
+        });
+        Route::get('/search', [UserController::class, 'search'])->middleware('permission:user.read');
+        Route::get('/', [UserController::class, 'index'])->middleware('permission:user.read');
+        Route::post('/', [UserController::class, 'store'])->middleware('permission:user.create');
+        Route::get('/{id}', [UserController::class, 'show'])->middleware('permission:user.read');
+        Route::put('/{id}', [UserController::class, 'update'])->middleware('permission:user.update');
+        Route::delete('/{id}', [UserController::class, 'destroy'])->middleware('permission:user.delete');
+    });
 
     // Category Endpoint
     Route::prefix('categories')->group(function () {

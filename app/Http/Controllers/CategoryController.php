@@ -194,6 +194,7 @@ class CategoryController
         }
 
         $categories = Category::where('category', 'like', '%' . $request->q . '%')
+            ->orWhere('slug', 'like', '%' . $request->q . '%')
             ->select(['id', 'category', 'slug'])
             ->get();
 
