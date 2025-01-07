@@ -16,11 +16,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        activity()->disableLogging();
+
         $this->call([
             PermissionSeeder::class,
             UserSeeder::class,
             CategorySeeder::class,
             TagSeeder::class
         ]);
+
+        activity()->enableLogging();
     }
 }

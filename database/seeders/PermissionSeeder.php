@@ -83,6 +83,11 @@ class PermissionSeeder extends Seeder
             'role.read',
             'role.update',
             'role.delete',
+            'user.update',
+            'user.delete',
+            'user.trashed',
+            'user.restore',
+            'user.forceDelete',
             'log.read'
         ])->get();
         $admin->givePermissionTo($adminPermissions);
@@ -94,5 +99,12 @@ class PermissionSeeder extends Seeder
             'password' => bcrypt('password'),
             'email_verified_at' => now()
         ])->assignRole('Super Admin');
+
+        User::create([
+            'name' => 'Admin',
+            'email' => 'admin@admin.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ])->assignRole('Admin');
     }
 }
