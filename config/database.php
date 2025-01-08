@@ -156,7 +156,9 @@ return [
             'username' => env('REDIS_USERNAME'),
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
-            'database' => env('REDIS_DB', '1'),
+            // 'scheme' => env('REDIS_SCHEME', 'unix'),
+            // 'path' => env('REDIS_PATH', '/home/mohfermy/.redis/redis.sock'),
+            'database' => env('REDIS_DB', '0'),
         ],
 
         'cache' => [
@@ -165,6 +167,8 @@ return [
             'username' => env('REDIS_USERNAME'),
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
+            // 'scheme' => env('REDIS_SCHEME', 'unix'),
+            // 'path' => env('REDIS_PATH', '/home/mohfermy/.redis/redis.sock'),
             'database' => env('REDIS_CACHE_DB', '1'),
         ],
 

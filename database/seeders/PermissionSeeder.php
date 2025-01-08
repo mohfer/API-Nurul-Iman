@@ -88,6 +88,10 @@ class PermissionSeeder extends Seeder
             'user.trashed',
             'user.restore',
             'user.forceDelete',
+            'category.forceDelete',
+            'news.forceDelete',
+            'tag.forceDelete',
+            'gallery.forceDelete',
             'log.read'
         ])->get();
         $admin->givePermissionTo($adminPermissions);

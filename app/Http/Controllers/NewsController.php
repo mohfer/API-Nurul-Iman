@@ -7,6 +7,7 @@ use App\Models\NewsTag;
 use App\Models\Category;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Spatie\Activitylog\Models\Activity;
 
 class NewsController
@@ -15,159 +16,218 @@ class NewsController
 
     public function index()
     {
-        //
+        try {
+        } catch (\Exception $e) {
+            Log::error('Error during fetching news: ' . $e->getMessage());
+            return $this->sendError('An error occurred while fetching news');
+        }
     }
 
     public function store(Request $request)
     {
-        //
+        try {
+        } catch (\Exception $e) {
+            Log::error('Error during creating news: ' . $e->getMessage());
+            return $this->sendError('An error occurred while creating news');
+        }
     }
 
-    public function show(Request $request)
+    public function show($id)
     {
-        //
+        try {
+        } catch (\Exception $e) {
+            Log::error('Error during showing news: ' . $e->getMessage());
+            return $this->sendError('An error occurred while showing news');
+        }
     }
 
-    public function update(Request $request)
+    public function update(Request $request, $id)
     {
-        //
+        try {
+        } catch (\Exception $e) {
+            Log::error('Error during updating news: ' . $e->getMessage());
+            return $this->sendError('An error occurred while updating news');
+        }
     }
 
-    public function destroy(Request $request)
+    public function destroy($id)
     {
-        //
+        try {
+        } catch (\Exception $e) {
+            Log::error('Error during deleting news: ' . $e->getMessage());
+            return $this->sendError('An error occurred while deleting news');
+        }
     }
 
     public function trashed()
     {
-        //
+        try {
+        } catch (\Exception $e) {
+            Log::error('Error during fetching trashed news: ' . $e->getMessage());
+            return $this->sendError('An error occurred while fetching trashed news');
+        }
     }
 
-    public function restore(Request $request)
+    public function restore($id)
     {
-        //
+        try {
+        } catch (\Exception $e) {
+            Log::error('Error during restoring news: ' . $e->getMessage());
+            return $this->sendError('An error occurred while restoring news');
+        }
     }
 
-    public function forceDelete(Request $request)
+    public function forceDelete($id)
     {
-        //
+        try {
+        } catch (\Exception $e) {
+            Log::error('Error during force deleting news: ' . $e->getMessage());
+            return $this->sendError('An error occurred while force deleting news');
+        }
     }
 
     public function draftNews(Request $request)
     {
-        $request->validate([
-            'title' => 'required|string',
-            'thumbnail' => 'required|image',
-            'content' => 'required|string',
-            'user_id' => 'required|string',
-            'category_id' => 'required|string',
-            'is_published' => 'required|boolean'
-        ]);
+        try {
+            $request->validate([
+                'title' => 'required|string',
+                'thumbnail' => 'required|image',
+                'content' => 'required|string',
+                'user_id' => 'required|string',
+                'category_id' => 'required|string',
+                'is_published' => 'required|boolean'
+            ]);
 
-        $news = News::create([
-            'title' => $request->title,
-            'thumbnail' => $request->thumbnail,
-            'content' => $request->content,
-            'user_id' => $request->user()->id,
-            'category_id' => $request->category_id,
-            'is_published' => false
-        ]);
+            $news = News::create([
+                'title' => $request->title,
+                'thumbnail' => $request->thumbnail,
+                'content' => $request->content,
+                'user_id' => $request->user()->id,
+                'category_id' => $request->category_id,
+                'is_published' => false
+            ]);
 
-        $data = [
-            'id' => $news->id,
-            'title' => $news->title,
-            'slug' =>  $news->slug,
-            'thumbnail' => $news->thumbnail,
-            'content' => $news->content,
-            'user_id' => $news->user()->id,
-            'category_id' => $news->category_id,
-            'is_published' => false
-        ];
+            $data = [
+                'id' => $news->id,
+                'title' => $news->title,
+                'slug' =>  $news->slug,
+                'thumbnail' => $news->thumbnail,
+                'content' => $news->content,
+                'user_id' => $news->user()->id,
+                'category_id' => $news->category_id,
+                'is_published' => false
+            ];
 
-        Activity::all()->last();
+            Activity::all()->last();
 
-        return $this->sendResponse($data, 'News drafted successfully', 201);
+            return $this->sendResponse($data, 'News drafted successfully', 201);
+        } catch (\Exception $e) {
+            Log::error('Error during drafting news: ' . $e->getMessage());
+            return $this->sendError('An error occurred while drafting news');
+        }
     }
 
     public function showDraftNews()
     {
-        //
+        try {
+        } catch (\Exception $e) {
+            Log::error('Error during fetching drafted news: ' . $e->getMessage());
+            return $this->sendError('An error occurred while fetching drafted news');
+        }
     }
 
-    public function published(Request $request)
+    public function published(Request $request, $id)
     {
-        $news = News::where('id', $request->id)->first();
+        try {
+            $news = News::find($id);
 
-        if (!$news) {
-            return $this->sendError('News not found', 404);
+            if (!$news) {
+                return $this->sendError('News not found', 404);
+            }
+
+            $request->validate([
+                'title' => 'required|string',
+                'thumbnail' => 'required|image',
+                'content' => 'required|string',
+                'category_id' => 'required|string',
+                'is_published' => 'required|boolean'
+            ]);
+
+            $news->slug = null;
+            $news->title = $request->title;
+            $news->thumbnail = $request->thumbnail;
+            $news->content = $request->content;
+            $news->category_id = $request->category_id;
+            $news->is_published = true;
+            $news->published_at = date(now());
+            $news->save();
+
+            $data = [
+                'is_published' => $news->is_published
+            ];
+
+            Activity::all()->last();
+
+            return $this->sendResponse($data, 'News successfully published');
+        } catch (\Exception $e) {
+            Log::error('Error during publishing news: ' . $e->getMessage());
+            return $this->sendError('An error occurred while publishing news');
         }
-
-        $request->validate([
-            'title' => 'required|string',
-            'thumbnail' => 'required|image',
-            'content' => 'required|string',
-            'category_id' => 'required|string',
-            'is_published' => 'required|boolean'
-        ]);
-
-        $news->slug = null;
-        $news->title = $request->title;
-        $news->thumbnail = $request->thumbnail;
-        $news->content = $request->content;
-        $news->category_id = $request->category_id;
-        $news->is_published = true;
-        $news->published_at = date(now());
-        $news->save();
-
-        $data = [
-            'is_published' => $news->is_published
-        ];
-
-        Activity::all()->last();
-
-        return $this->sendResponse($data, 'News successfully published');
     }
 
     public function showByAuthor(Request $request)
     {
-        //
+        try {
+        } catch (\Exception $e) {
+            Log::error('Error during fetching news by author: ' . $e->getMessage());
+            return $this->sendError('An error occurred while fetching news by author');
+        }
     }
 
     public function showByCategory(Request $request)
     {
-        $category = Category::with(['news.news_tags.tag', 'news.user', 'news.category'])->where('slug', $request->slug)->first();
-        $news = $category->news;
-        $newsTags = $news->pluck('news_tags')->flatten();
-        $newsDetails = $news->where('is_published', true);
+        try {
+            $category = Category::with(['news.news_tags.tag', 'news.user', 'news.category'])->where('slug', $request->slug)->first();
+            $news = $category->news;
+            $newsTags = $news->pluck('news_tags')->flatten();
+            $newsDetails = $news->where('is_published', true);
 
-        if (!$newsDetails) {
-            return $this->sendError('News with category ' . $category->name . ' not found', 404);
-        }
+            if (!$newsDetails) {
+                return $this->sendError('News with category ' . $category->name . ' not found', 404);
+            }
 
-        $tags = [];
-        foreach ($newsTags as $newsTag) {
-            $tags[] = [
-                'id' => $newsTag->tag->id,
-                'tag' => $newsTag->tag->tag,
-                'slug' => $newsTag->tag->slug
+            $tags = [];
+            foreach ($newsTags as $newsTag) {
+                $tags[] = [
+                    'id' => $newsTag->tag->id,
+                    'tag' => $newsTag->tag->tag,
+                    'slug' => $newsTag->tag->slug
+                ];
+            }
+
+            $data = [
+                'id' => $newsDetails->id,
+                'title' => $newsDetails->title,
+                'thumbnail' => $newsDetails->thumbnail,
+                'content' => $newsDetails->content,
+                'author' => $newsDetails->user->name,
+                'category' => $newsDetails->category->category,
+                'tags' => $tags
             ];
+
+            return $this->sendResponse($data, 'News fetched successfully');
+        } catch (\Exception $e) {
+            Log::error('Error during fetching news by category: ' . $e->getMessage());
+            return $this->sendError('An error occurred while fetching news by category');
         }
-
-        $data = [
-            'id' => $newsDetails->id,
-            'title' => $newsDetails->title,
-            'thumbnail' => $newsDetails->thumbnail,
-            'content' => $newsDetails->content,
-            'author' => $newsDetails->user->name,
-            'category' => $newsDetails->category->category,
-            'tags' => $tags
-        ];
-
-        return $this->sendResponse($data, 'News fetched successfully');
     }
 
     public function showByTag(Request $request)
     {
-        //
+        try {
+        } catch (\Exception $e) {
+            Log::error('Error during fetching news by tag: ' . $e->getMessage());
+            return $this->sendError('An error occurred while fetching news by tag');
+        }
     }
 }
