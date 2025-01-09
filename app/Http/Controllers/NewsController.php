@@ -7,19 +7,22 @@ use App\Models\NewsTag;
 use App\Models\Category;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use App\Traits\GenerateRequestId;
 use Illuminate\Support\Facades\Log;
 use Spatie\Activitylog\Models\Activity;
+use Illuminate\Support\Facades\Validator;
 
 class NewsController
 {
-    use ApiResponse;
+    use ApiResponse, GenerateRequestId;
 
     public function index()
     {
         try {
         } catch (\Exception $e) {
-            Log::error('Error during fetching news: ' . $e->getMessage());
-            return $this->sendError('An error occurred while fetching news');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during fetching news: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while fetching news');
         }
     }
 
@@ -27,8 +30,9 @@ class NewsController
     {
         try {
         } catch (\Exception $e) {
-            Log::error('Error during creating news: ' . $e->getMessage());
-            return $this->sendError('An error occurred while creating news');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during creating news: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while creating news');
         }
     }
 
@@ -36,8 +40,9 @@ class NewsController
     {
         try {
         } catch (\Exception $e) {
-            Log::error('Error during showing news: ' . $e->getMessage());
-            return $this->sendError('An error occurred while showing news');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during showing news: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while showing news');
         }
     }
 
@@ -45,8 +50,9 @@ class NewsController
     {
         try {
         } catch (\Exception $e) {
-            Log::error('Error during updating news: ' . $e->getMessage());
-            return $this->sendError('An error occurred while updating news');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during updating news: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while updating news');
         }
     }
 
@@ -54,8 +60,9 @@ class NewsController
     {
         try {
         } catch (\Exception $e) {
-            Log::error('Error during deleting news: ' . $e->getMessage());
-            return $this->sendError('An error occurred while deleting news');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during deleting news: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while deleting news');
         }
     }
 
@@ -63,8 +70,9 @@ class NewsController
     {
         try {
         } catch (\Exception $e) {
-            Log::error('Error during fetching trashed news: ' . $e->getMessage());
-            return $this->sendError('An error occurred while fetching trashed news');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during fetching trashed news: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while fetching trashed news');
         }
     }
 
@@ -72,8 +80,9 @@ class NewsController
     {
         try {
         } catch (\Exception $e) {
-            Log::error('Error during restoring news: ' . $e->getMessage());
-            return $this->sendError('An error occurred while restoring news');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during restoring news: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while restoring news');
         }
     }
 
@@ -81,26 +90,31 @@ class NewsController
     {
         try {
         } catch (\Exception $e) {
-            Log::error('Error during force deleting news: ' . $e->getMessage());
-            return $this->sendError('An error occurred while force deleting news');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during force deleting news: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while force deleting news');
         }
     }
 
     public function draftNews(Request $request)
     {
         try {
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'title' => 'required|string',
-                'thumbnail' => 'required|image',
+                'thumbnail' => 'required|file|mimes:jpeg,png,jpg|max:2048',
                 'content' => 'required|string',
                 'user_id' => 'required|string',
                 'category_id' => 'required|string',
                 'is_published' => 'required|boolean'
             ]);
 
+            if ($validator->fails()) {
+                return $this->sendErrorWithValidation($validator->errors());
+            }
+
             $news = News::create([
                 'title' => $request->title,
-                'thumbnail' => $request->thumbnail,
+                'thumbnail' => $request->file,
                 'content' => $request->content,
                 'user_id' => $request->user()->id,
                 'category_id' => $request->category_id,
@@ -122,8 +136,9 @@ class NewsController
 
             return $this->sendResponse($data, 'News drafted successfully', 201);
         } catch (\Exception $e) {
-            Log::error('Error during drafting news: ' . $e->getMessage());
-            return $this->sendError('An error occurred while drafting news');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during drafting news: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while drafting news');
         }
     }
 
@@ -131,8 +146,9 @@ class NewsController
     {
         try {
         } catch (\Exception $e) {
-            Log::error('Error during fetching drafted news: ' . $e->getMessage());
-            return $this->sendError('An error occurred while fetching drafted news');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during fetching drafted news: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while fetching drafted news');
         }
     }
 
@@ -145,13 +161,17 @@ class NewsController
                 return $this->sendError('News not found', 404);
             }
 
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'title' => 'required|string',
                 'thumbnail' => 'required|image',
                 'content' => 'required|string',
                 'category_id' => 'required|string',
                 'is_published' => 'required|boolean'
             ]);
+
+            if ($validator->fails()) {
+                return $this->sendErrorWithValidation($validator->errors());
+            }
 
             $news->slug = null;
             $news->title = $request->title;
@@ -170,8 +190,9 @@ class NewsController
 
             return $this->sendResponse($data, 'News successfully published');
         } catch (\Exception $e) {
-            Log::error('Error during publishing news: ' . $e->getMessage());
-            return $this->sendError('An error occurred while publishing news');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during publishing news: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while publishing news');
         }
     }
 
@@ -179,8 +200,9 @@ class NewsController
     {
         try {
         } catch (\Exception $e) {
-            Log::error('Error during fetching news by author: ' . $e->getMessage());
-            return $this->sendError('An error occurred while fetching news by author');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during fetching news by author: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while fetching news by author');
         }
     }
 
@@ -217,8 +239,9 @@ class NewsController
 
             return $this->sendResponse($data, 'News fetched successfully');
         } catch (\Exception $e) {
-            Log::error('Error during fetching news by category: ' . $e->getMessage());
-            return $this->sendError('An error occurred while fetching news by category');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during fetching news by category: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while fetching news by category');
         }
     }
 
@@ -226,8 +249,9 @@ class NewsController
     {
         try {
         } catch (\Exception $e) {
-            Log::error('Error during fetching news by tag: ' . $e->getMessage());
-            return $this->sendError('An error occurred while fetching news by tag');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during fetching news by tag: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while fetching news by tag');
         }
     }
 }

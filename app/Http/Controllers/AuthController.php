@@ -6,28 +6,34 @@ use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Traits\GenerateRequestId;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController
 {
-    use ApiResponse;
+    use ApiResponse, GenerateRequestId;
 
     public function login(Request $request)
     {
         try {
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'email' => 'required|email',
                 'password' => 'required|min:8',
                 'remember_me' => 'required|boolean'
             ]);
 
+            if ($validator->fails()) {
+                return $this->sendErrorWithValidation($validator->errors());
+            }
+
             if (!Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-                return $this->sendError('Invalid credentials', 401);
+                return $this->sendError('Invalid credentials', 422);
             }
 
             $user = Auth::user();
@@ -57,8 +63,9 @@ class AuthController
 
             return $this->sendResponse($data, 'User logged in successfully');
         } catch (\Exception $e) {
-            Log::error('Error during login: ' . $e->getMessage());
-            return $this->sendError('An error occurred while login');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during login: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while login');
         }
     }
 
@@ -66,7 +73,7 @@ class AuthController
     {
         try {
             if ($request->user()->hasVerifiedEmail()) {
-                return $this->sendError('Email already verified', 400);
+                return $this->sendError('Email already verified', 422);
             }
 
             $request->fulfill();
@@ -77,8 +84,9 @@ class AuthController
 
             return $this->sendResponse(null, 'Email verified successfully');
         } catch (\Exception $e) {
-            Log::error('Error during verification email: ' . $e->getMessage());
-            return $this->sendError('An error occurred while verification email');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during verification email: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while verification email');
         }
     }
 
@@ -93,17 +101,22 @@ class AuthController
 
             return $this->sendResponse(null, 'Verification email sent successfully');
         } catch (\Exception $e) {
-            Log::error('Error during resending verification email: ' . $e->getMessage());
-            return $this->sendError('An error occurred while resending verification email');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during resending verification email: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while resending verification email');
         }
     }
 
     public function forgotPassword(Request $request)
     {
         try {
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'email' => 'required|email|exists:users',
             ]);
+
+            if ($validator->fails()) {
+                return $this->sendErrorWithValidation($validator->errors());
+            }
 
             $status = Password::sendResetLink(
                 $request->only('email')
@@ -115,21 +128,26 @@ class AuthController
 
             return $status === Password::RESET_LINK_SENT
                 ? $this->sendResponse(null, 'Reset password link sent successfully')
-                : $this->sendError('Error occurred', 400);
+                : $this->sendError('Error occurred', 422);
         } catch (\Exception $e) {
-            Log::error('Error during forgoting password: ' . $e->getMessage());
-            return $this->sendError('An error occurred while forgoting password');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during forgoting password: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while forgoting password');
         }
     }
 
     public function resetPassword(Request $request)
     {
         try {
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'token' => 'required',
                 'email' => 'required|email',
                 'password' => 'required|min:8|confirmed',
             ]);
+
+            if ($validator->fails()) {
+                return $this->sendErrorWithValidation($validator->errors());
+            }
 
             $status = Password::reset(
                 $request->only('email', 'password', 'password_confirmation', 'token'),
@@ -150,23 +168,28 @@ class AuthController
 
             return $status === Password::PASSWORD_RESET
                 ? $this->sendResponse(null, 'Password reset successfully')
-                : $this->sendError('Error occurred', 400);
+                : $this->sendError('Error Occurred', 422);
         } catch (\Exception $e) {
-            Log::error('Error during reseting password: ' . $e->getMessage());
-            return $this->sendError('An error occurred while reseting password');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during reseting password: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while reseting password');
         }
     }
 
     public function changePassword(Request $request)
     {
         try {
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'current_password' => 'required',
                 'new_password' => 'required|min:8|confirmed',
             ]);
 
+            if ($validator->fails()) {
+                return $this->sendErrorWithValidation($validator->errors());
+            }
+
             if (!Hash::check($request->current_password, $request->user()->password)) {
-                return $this->sendError('Current password does not match', 400);
+                return $this->sendError('Current password does not match', 422);
             }
 
             $request->user()->update([
@@ -179,8 +202,9 @@ class AuthController
 
             return $this->sendResponse(null, 'Password changed successfully');
         } catch (\Exception $e) {
-            Log::error('Error during changing password: ' . $e->getMessage());
-            return $this->sendError('An error occurred while changing password');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during changing password: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while changing password');
         }
     }
 
@@ -195,8 +219,9 @@ class AuthController
 
             return $this->sendResponse(null, 'User logged out successfully');
         } catch (\Exception $e) {
-            Log::error('Error during logout: ' . $e->getMessage());
-            return $this->sendError('An error occurred while logout');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during logout: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while logout');
         }
     }
 }

@@ -5,13 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use App\Traits\GenerateRequestId;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Spatie\Activitylog\Models\Activity;
+use Illuminate\Support\Facades\Validator;
 
 class CategoryController
 {
-    use ApiResponse;
+    use ApiResponse, GenerateRequestId;
 
     public function index()
     {
@@ -33,17 +35,22 @@ class CategoryController
 
             return $this->sendResponse($categories, 'Category fetched successfully');
         } catch (\Exception $e) {
-            Log::error('Error during fetching categories: ' . $e->getMessage());
-            return $this->sendError('An error occurred while fetching categories');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during fetching categories: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while fetching categories');
         }
     }
 
     public function store(Request $request)
     {
         try {
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'category' => 'required|string|unique:categories'
             ]);
+
+            if ($validator->fails()) {
+                return $this->sendErrorWithValidation($validator->errors());
+            }
 
             $category = Category::create([
                 'category' => $request->category
@@ -57,8 +64,9 @@ class CategoryController
 
             return $this->sendResponse($data, 'Category created successfully', 201);
         } catch (\Exception $e) {
-            Log::error('Error during creating category: ' . $e->getMessage());
-            return $this->sendError('An error occurred while creating category');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during creating category: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while creating category');
         }
     }
 
@@ -75,8 +83,9 @@ class CategoryController
 
             return $this->sendResponse($data, 'Category fetched successfully');
         } catch (\Exception $e) {
-            Log::error('Error during showing category: ' . $e->getMessage());
-            return $this->sendError('An error occurred while showing category');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during showing category: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while showing category');
         }
     }
 
@@ -89,9 +98,13 @@ class CategoryController
                 return $this->sendError('Category not found', 404);
             }
 
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'category' => 'required|string|' . ($category->category != $request->category ? 'unique:categories' : '')
             ]);
+
+            if ($validator->fails()) {
+                return $this->sendErrorWithValidation($validator->errors());
+            }
 
             $category->slug = null;
             $category->category = $request->category;
@@ -105,8 +118,9 @@ class CategoryController
 
             return $this->sendResponse($data, 'Category updated successfully');
         } catch (\Exception $e) {
-            Log::error('Error during updating category: ' . $e->getMessage());
-            return $this->sendError('An error occurred while updating category');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during updating category: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while updating category');
         }
     }
 
@@ -132,8 +146,9 @@ class CategoryController
 
             return $this->sendResponse($data, 'Category deleted successfully');
         } catch (\Exception $e) {
-            Log::error('Error during deleting category: ' . $e->getMessage());
-            return $this->sendError('An error occurred while deleting category');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during deleting category: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while deleting category');
         }
     }
 
@@ -157,8 +172,9 @@ class CategoryController
 
             return $this->sendResponse($categories, 'Category fetched successfully');
         } catch (\Exception $e) {
-            Log::error('Error during fething trashed categories: ' . $e->getMessage());
-            return $this->sendError('An error occurred while fetching trashed categories');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during fething trashed categories: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while fetching trashed categories');
         }
     }
 
@@ -184,8 +200,9 @@ class CategoryController
 
             return $this->sendResponse($data, 'Category restored successfully');
         } catch (\Exception $e) {
-            Log::error('Error during restoring category: ' . $e->getMessage());
-            return $this->sendError('An error occurred while restoring category');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during restoring category: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while restoring category');
         }
     }
 
@@ -208,8 +225,9 @@ class CategoryController
 
             return $this->sendResponse($data, 'Category deleted permanently');
         } catch (\Exception $e) {
-            Log::error('Error during force deleting category: ' . $e->getMessage());
-            return $this->sendError('An error occurred while force deleting category');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during force deleting category: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while force deleting category');
         }
     }
 
@@ -246,8 +264,9 @@ class CategoryController
 
             return $this->sendResponse($categories, 'Categories fetched successfully');
         } catch (\Exception $e) {
-            Log::error('Error during searching categories: ' . $e->getMessage());
-            return $this->sendError('An error occurred while searching categories');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during searching categories: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while searching categories');
         }
     }
 }

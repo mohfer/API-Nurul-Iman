@@ -15,7 +15,8 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('title');
             $table->string('slug')->unique();
-            $table->string('thumbnail');
+            $table->string('image_url')->nullable();
+            $table->string('image_name')->nullable();
             $table->string('content');
             $table->foreignUuid('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreignUuid('category_id')->references('id')->on('categories')->onDelete('cascade');

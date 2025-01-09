@@ -5,14 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use App\Traits\GenerateRequestId;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Auth\Events\Registered;
 use Spatie\Activitylog\Models\Activity;
+use Illuminate\Support\Facades\Validator;
 
 class UserController
 {
-    use ApiResponse;
+    use ApiResponse, GenerateRequestId;
 
     public function index()
     {
@@ -34,19 +36,24 @@ class UserController
 
             return $this->sendResponse($users, 'User fetched successfully');
         } catch (\Exception $e) {
-            Log::error('Error during fetching users: ' . $e->getMessage());
-            return $this->sendError('An error occurred while fetching users');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during fetching users: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while fetching users');
         }
     }
 
     public function store(Request $request)
     {
         try {
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'required|string',
                 'email' => 'required|email|unique:users',
                 'password' => 'required|min:8'
             ]);
+
+            if ($validator->fails()) {
+                return $this->sendErrorWithValidation($validator->errors());
+            }
 
             $user = User::create([
                 'name' => $request->name,
@@ -64,8 +71,9 @@ class UserController
 
             return $this->sendResponse($data, 'User created successfully', 201);
         } catch (\Exception $e) {
-            Log::error('Error during creating user: ' . $e->getMessage());
-            return $this->sendError('An error occurred while creating user');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during creating user: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while creating user');
         }
     }
 
@@ -82,8 +90,9 @@ class UserController
 
             return $this->sendResponse($data, 'User fetched successfully');
         } catch (\Exception $e) {
-            Log::error('Error during showing user: ' . $e->getMessage());
-            return $this->sendError('An error occurred while showing user');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during showing user: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while showing user');
         }
     }
 
@@ -96,10 +105,14 @@ class UserController
                 return $this->sendError('User not found', 404);
             }
 
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'name' => 'required|string',
                 'email' => 'required|email|' . ($user->email != $request->email ? 'unique:users' : '')
             ]);
+
+            if ($validator->fails()) {
+                return $this->sendErrorWithValidation($validator->errors());
+            }
 
             $user->slug = null;
             $user->name = $request->name;
@@ -114,8 +127,9 @@ class UserController
 
             return $this->sendResponse($data, 'User updated successfully');
         } catch (\Exception $e) {
-            Log::error('Error during updating user: ' . $e->getMessage());
-            return $this->sendError('An error occurred while updating user');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during updating user: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while updating user');
         }
     }
 
@@ -141,8 +155,9 @@ class UserController
 
             return $this->sendResponse($data, 'User deleted successfully');
         } catch (\Exception $e) {
-            Log::error('Error during deleting user: ' . $e->getMessage());
-            return $this->sendError('An error occurred while deleting user');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during deleting user: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while deleting user');
         }
     }
 
@@ -166,8 +181,9 @@ class UserController
 
             return $this->sendResponse($users, 'User fetched successfully');
         } catch (\Exception $e) {
-            Log::error('Error during fetching trashed users: ' . $e->getMessage());
-            return $this->sendError('An error occurred while fetching trashed users');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during fetching trashed users: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while fetching trashed users');
         }
     }
 
@@ -193,8 +209,9 @@ class UserController
 
             return $this->sendResponse($data, 'User restored successfully');
         } catch (\Exception $e) {
-            Log::error('Error during restoring user: ' . $e->getMessage());
-            return $this->sendError('An error occurred while restoring user');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during restoring user: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while restoring user');
         }
     }
 
@@ -217,8 +234,9 @@ class UserController
 
             return $this->sendResponse($data, 'User deleted permanently');
         } catch (\Exception $e) {
-            Log::error('Error during force deleting user: ' . $e->getMessage());
-            return $this->sendError('An error occurred while force deleting user');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during force deleting user: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while force deleting user');
         }
     }
 
@@ -256,8 +274,9 @@ class UserController
 
             return $this->sendResponse($users, 'Users fetched successfully');
         } catch (\Exception $e) {
-            Log::error('Error during searching users: ' . $e->getMessage());
-            return $this->sendError('An error occurred while searching users');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during searching users: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while searching users');
         }
     }
 }

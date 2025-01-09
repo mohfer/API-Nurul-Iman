@@ -5,13 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Tag;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use App\Traits\GenerateRequestId;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Spatie\Activitylog\Models\Activity;
+use Illuminate\Support\Facades\Validator;
 
 class TagController
 {
-    use ApiResponse;
+    use ApiResponse, GenerateRequestId;
 
     public function index()
     {
@@ -33,17 +35,22 @@ class TagController
 
             return $this->sendResponse($tags, 'Tag fetched successfully');
         } catch (\Exception $e) {
-            Log::error('Error during fetching tags: ' . $e->getMessage());
-            return $this->sendError('An error occurred while fetching tags');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during fetching tags: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while fetching tags');
         }
     }
 
     public function store(Request $request)
     {
         try {
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'tag' => 'required|string|unique:tags'
             ]);
+
+            if ($validator->fails()) {
+                return $this->sendErrorWithValidation($validator->errors());
+            }
 
             $tag = Tag::create([
                 'tag' => $request->tag
@@ -57,8 +64,9 @@ class TagController
 
             return $this->sendResponse($data, 'Tag created successfully', 201);
         } catch (\Exception $e) {
-            Log::error('Error during creating tag: ' . $e->getMessage());
-            return $this->sendError('An error occurred while creating tag');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during creating tag: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while creating tag');
         }
     }
 
@@ -75,8 +83,9 @@ class TagController
 
             return $this->sendResponse($data, 'Tag fetched successfully');
         } catch (\Exception $e) {
-            Log::error('Error during showing tag: ' . $e->getMessage());
-            return $this->sendError('An error occurred while showing tag');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during showing tag: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while showing tag');
         }
     }
 
@@ -89,9 +98,13 @@ class TagController
                 return $this->sendError('Tag not found', 404);
             }
 
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'tag' => 'required|string|' . ($tag->tag != $request->tag ? 'unique:tags' : '')
             ]);
+
+            if ($validator->fails()) {
+                return $this->sendErrorWithValidation($validator->errors());
+            }
 
             $tag->slug = null;
             $tag->tag = $request->tag;
@@ -105,8 +118,9 @@ class TagController
 
             return $this->sendResponse($data, 'Tag updated successfully');
         } catch (\Exception $e) {
-            Log::error('Error during updating tag: ' . $e->getMessage());
-            return $this->sendError('An error occurred while updating tag');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during updating tag: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while updating tag');
         }
     }
 
@@ -132,8 +146,9 @@ class TagController
 
             return $this->sendResponse($data, 'Tag deleted successfully');
         } catch (\Exception $e) {
-            Log::error('Error during deleting tag: ' . $e->getMessage());
-            return $this->sendError('An error occurred while deleting tag');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during deleting tag: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while deleting tag');
         }
     }
 
@@ -157,8 +172,9 @@ class TagController
 
             return $this->sendResponse($tags, 'Tag fetched successfully');
         } catch (\Exception $e) {
-            Log::error('Error during fetching trashed tags: ' . $e->getMessage());
-            return $this->sendError('An error occurred while fetching trashed tags');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during fetching trashed tags: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while fetching trashed tags');
         }
     }
 
@@ -184,8 +200,9 @@ class TagController
 
             return $this->sendResponse($data, 'Tag restored successfully');
         } catch (\Exception $e) {
-            Log::error('Error during restoring tag: ' . $e->getMessage());
-            return $this->sendError('An error occurred while restoring tag');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during restoring tag: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while restoring tag');
         }
     }
 
@@ -208,8 +225,9 @@ class TagController
 
             return $this->sendResponse($data, 'Tag deleted permanently');
         } catch (\Exception $e) {
-            Log::error('Error during force deleting tag: ' . $e->getMessage());
-            return $this->sendError('An error occurred while force deleting tag');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during force deleting tag: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while force deleting tag');
         }
     }
 
@@ -246,8 +264,9 @@ class TagController
 
             return $this->sendResponse($tags, 'Tags fetched successfully');
         } catch (\Exception $e) {
-            Log::error('Error during searching tags: ' . $e->getMessage());
-            return $this->sendError('An error occurred while searching tags');
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during searching tags: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while searching tags');
         }
     }
 }
