@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\CategoryController;
@@ -88,6 +89,16 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
         Route::get('/{id}', [GalleryController::class, 'show'])->middleware('permission:gallery.read');
         Route::put('/{id}', [GalleryController::class, 'update'])->middleware('permission:gallery.update');
         Route::delete('/{id}', [GalleryController::class, 'destroy'])->middleware('permission:gallery.delete');
+    });
+
+    // Role Endpoint
+    Route::prefix('roles')->group(function () {
+        Route::get('/search', [RoleController::class, 'search'])->middleware('permission:role.read');
+        Route::get('/', [RoleController::class, 'index'])->middleware('permission:role.read');
+        Route::post('/', [RoleController::class, 'store'])->middleware('permission:role.create');
+        Route::get('/{id}', [RoleController::class, 'show'])->middleware('permission:role.read');
+        Route::put('/{id}', [RoleController::class, 'update'])->middleware('permission:role.update');
+        Route::delete('/{id}', [RoleController::class, 'destroy'])->middleware('permission:role.delete');
     });
 
     // News Endpoint

@@ -47,7 +47,7 @@ class GalleryController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+                'image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
                 'title' => 'required|string',
                 'description' => 'required|string',
             ]);
@@ -58,18 +58,18 @@ class GalleryController
 
             $image = $request->file('image');
             $fileName = Str::uuid() . '.' . $image->getClientOriginalExtension();
-            $filePath = 'nurulimankasemen-storage/galleries/' . $fileName;
+            $filePath = env('GOOGLE_DRIVE_SUBFOLDER') . '/galleries/' . $fileName;
 
             Gdrive::put($filePath, $image);
 
-            $fileMetadata = collect(Gdrive::all('nurulimankasemen-storage/galleries/'))
+            $fileMetadata = collect(Gdrive::all(env('GOOGLE_DRIVE_SUBFOLDER') . '/galleries/'))
                 ->firstWhere('extra_metadata.name', $fileName);
 
             if (!$fileMetadata) {
-                throw new \Exception("File metadata tidak ditemukan di Google Drive.");
+                throw new \Exception("The metadata file was not found in Google Drive.");
             }
 
-            $thumbnailUrl = 'https://lh3.googleusercontent.com/d/' . $fileMetadata['extra_metadata']['id'];
+            $thumbnailUrl = env('GOOGLE_DRIVE_URL') . $fileMetadata['extra_metadata']['id'];
 
             $gallery = Gallery::create([
                 'title' => $request->title,
@@ -121,7 +121,7 @@ class GalleryController
             }
 
             $validator = Validator::make($request->all(), [
-                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
                 'title' => 'required|string',
                 'description' => 'required|string',
             ]);
@@ -133,18 +133,18 @@ class GalleryController
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
                 $newFileName = Str::uuid()->toString() . '.' . $image->getClientOriginalExtension();
-                $newFilePath = 'nurulimankasemen-storage/galleries/' . $newFileName;
+                $newFilePath = env('GOOGLE_DRIVE_SUBFOLDER') . '/galleries/' . $newFileName;
 
                 Gdrive::put($newFilePath, $image);
 
-                $files = Gdrive::all('nurulimankasemen-storage/galleries/');
+                $files = Gdrive::all(env('GOOGLE_DRIVE_SUBFOLDER') . '/galleries/');
                 $filesCollection = collect($files);
 
                 if ($gallery->image_name) {
                     $oldFile = $filesCollection->firstWhere('extra_metadata.name', $gallery->image_name);
                     if ($oldFile) {
                         try {
-                            Gdrive::delete('nurulimankasemen-storage/galleries/' . $gallery->image_name);
+                            Gdrive::delete(env('GOOGLE_DRIVE_SUBFOLDER') . '/galleries/' . $gallery->image_name);
                         } catch (\Exception $e) {
                             Log::warning("Failed to delete old file: {$gallery->image_name}");
                         }
@@ -153,10 +153,10 @@ class GalleryController
 
                 $newFileMetadata = $filesCollection->firstWhere('extra_metadata.name', $newFileName);
                 if (!$newFileMetadata) {
-                    throw new \Exception("Gagal mendapatkan metadata file yang baru diunggah.");
+                    throw new \Exception("Failed to get the metadata of the newly uploaded file.");
                 }
 
-                $gallery->image_url = 'https://lh3.googleusercontent.com/d/' . $newFileMetadata['extra_metadata']['id'];
+                $gallery->image_url = env('GOOGLE_DRIVE_URL') . $newFileMetadata['extra_metadata']['id'];
                 $gallery->image_name = $newFileName;
             }
 
@@ -270,7 +270,7 @@ class GalleryController
             }
 
             if ($gallery->image_name) {
-                Gdrive::delete('nurulimankasemen-storage/galleries/' . $gallery->image_name);
+                Gdrive::delete(env('GOOGLE_DRIVE_SUBFOLDER') . '/galleries/' . $gallery->image_name);
             }
 
             $gallery->forceDelete();

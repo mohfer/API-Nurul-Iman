@@ -53,7 +53,7 @@ trait ApiResponse
 
     /**
      *
-     * @param mixed $data
+     * @param mixed $requestId
      * @param string $message
      * @param int $code
      * @return \Illuminate\Http\JsonResponse

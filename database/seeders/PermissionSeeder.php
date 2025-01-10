@@ -70,14 +70,15 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'log.read']);
 
         foreach ($roles as $role) {
-            Role::create(['name' => $role]);
+            Role::create(['name' => $role, 'guard_name' => 'sanctum']);
         }
 
-        $superAdmin = Role::findByName('Super Admin');
-        $admin = Role::findByName('Admin');
-        $writer = Role::findByName('Writer');
+        $superAdmin = Role::findByName('Super Admin', 'sanctum');
+        $admin = Role::findByName('Admin', 'sanctum');
+        $writer = Role::findByName('Writer', 'sanctum');
 
-        $superAdmin->givePermissionTo(Permission::all());
+        $superAdmin->syncPermissions(Permission::all());
+
         $adminPermissions = Permission::whereNotIn('name', [
             'role.create',
             'role.read',
@@ -94,8 +95,9 @@ class PermissionSeeder extends Seeder
             'gallery.forceDelete',
             'log.read'
         ])->get();
-        $admin->givePermissionTo($adminPermissions);
-        $writer->givePermissionTo('news.create', 'news.read', 'news.update', 'news.delete');
+        $admin->syncPermissions($adminPermissions);
+
+        $writer->syncPermissions(['news.create', 'news.read', 'news.update', 'news.delete']);
 
         User::create([
             'name' => 'Super Admin',

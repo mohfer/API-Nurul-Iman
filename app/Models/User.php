@@ -45,6 +45,8 @@ class User extends Authenticatable implements MustVerifyEmail, CanResetPassword
         'remember_token',
     ];
 
+    protected $guard_name = ['sanctum', 'users'];
+
     /**
      * Get the attributes that should be cast.
      *
