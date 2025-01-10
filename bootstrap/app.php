@@ -26,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->renderable(function (UnauthorizedException $e, $request) {
             return response()->json([
                 'code' => 403,
-                'message' => 'Permission failed.',
+                'message' => 'Permission denied.',
                 'error' => $e->getMessage(),
             ], 403);
         });

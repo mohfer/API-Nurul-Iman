@@ -23,7 +23,8 @@ class News extends Model
     protected $fillable = [
         'title',
         'slug',
-        'thumbnail',
+        'image_url',
+        'image_name',
         'content',
         'user_id',
         'category_id',
@@ -61,7 +62,7 @@ class News extends Model
             ->useLogName('news')
             ->logOnly([
                 'title',
-                'thumbnail',
+                'image_url',
                 'content',
                 'user.name',
                 'category.category',

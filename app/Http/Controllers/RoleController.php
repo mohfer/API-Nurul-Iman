@@ -30,13 +30,9 @@ class RoleController
             $roles = Role::select(['uuid', 'name'])->get();
 
             $rolesData = $roles->map(function ($role) {
-                return array_merge(
-                    ['uuid' => $role->uuid],
-                    $role->only($role->getFillable()),
-                    [
-                        'permissions' => $role->getAllPermissions()->pluck('name')->toArray()
-                    ]
-                );
+                return array_merge(['uuid' => $role->uuid], $role->only($role->getFillable()), [
+                    'permissions' => $role->getAllPermissions()->pluck('name')->toArray()
+                ]);
             });
 
             if ($roles->isEmpty()) {
@@ -74,13 +70,9 @@ class RoleController
                 $role->givePermissionTo($request->permissions);
             }
 
-            $data = array_merge(
-                ['uuid' => $role->uuid],
-                $role->only($role->getFillable()),
-                [
-                    'permissions' => $role->getAllPermissions()->pluck('name')->toArray()
-                ]
-            );
+            $data = array_merge(['uuid' => $role->uuid], $role->only($role->getFillable()), [
+                'permissions' => $role->getAllPermissions()->pluck('name')->toArray()
+            ]);
 
             Activity::all()->last();
 
@@ -103,13 +95,9 @@ class RoleController
                 return $this->sendError('Role not found', 404);
             }
 
-            $data = array_merge(
-                ['uuid' => $role->uuid],
-                $role->only($role->getFillable()),
-                [
-                    'permissions' => $role->getAllPermissions()->pluck('name')->toArray()
-                ]
-            );
+            $data = array_merge(['uuid' => $role->uuid], $role->only($role->getFillable()), [
+                'permissions' => $role->getAllPermissions()->pluck('name')->toArray()
+            ]);
 
             return $this->sendResponse($data, 'Role fetched successfully');
         } catch (\Exception $e) {
@@ -170,13 +158,15 @@ class RoleController
                 return $this->sendError('Role not found', 404);
             }
 
+            $data = array_merge(['uuid' => $role->uuid], $role->only($role->getFillable()), [
+                'permissions' => $role->getAllPermissions()->pluck('name')->toArray()
+            ]);
+
             if ($role->permissions->isNotEmpty()) {
                 $role->syncPermissions([]);
             }
 
             $role->delete();
-
-            $data = array_merge(['id' => $role->uuid], $role->only($role->getFillable()));
 
             Activity::all()->last();
 
@@ -201,15 +191,21 @@ class RoleController
                     return $this->sendResponse($roles, 'Roles fetched successfully from cache');
                 }
 
-                $roles = Role::select(['uuid', 'name'])->get();
+                $roles = Role::with('permissions:name')->select(['uuid', 'name'])->get();
+
+                $rolesData = $roles->map(function ($role) {
+                    return array_merge(['uuid' => $role->uuid], $role->only($role->getFillable()), [
+                        'permissions' => $role->getAllPermissions()->pluck('name')->toArray()
+                    ]);
+                });
 
                 if ($roles->isEmpty()) {
                     return $this->sendResponse([], 'No roles found');
                 }
 
-                Redis::setex('roles.index', 3600, json_encode($roles));
+                Redis::setex('roles.index', 3600, json_encode($rolesData));
 
-                return $this->sendResponse($roles, 'Roles fetched successfully');
+                return $this->sendResponse($rolesData, 'Roles fetched successfully');
             }
 
             $roles = Role::where('name', 'like', '%' . $request->q . '%')
@@ -217,13 +213,9 @@ class RoleController
                 ->get();
 
             $rolesData = $roles->map(function ($role) {
-                return array_merge(
-                    ['uuid' => $role->uuid],
-                    $role->only($role->getFillable()),
-                    [
-                        'permissions' => $role->getAllPermissions()->pluck('name')->toArray()
-                    ]
-                );
+                return array_merge(['uuid' => $role->uuid], $role->only($role->getFillable()), [
+                    'permissions' => $role->getAllPermissions()->pluck('name')->toArray()
+                ]);
             });
 
             if ($roles->isEmpty()) {

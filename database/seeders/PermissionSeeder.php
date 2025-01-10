@@ -70,12 +70,12 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'log.read']);
 
         foreach ($roles as $role) {
-            Role::create(['name' => $role, 'guard_name' => 'sanctum']);
+            Role::create(['name' => $role]);
         }
 
-        $superAdmin = Role::findByName('Super Admin', 'sanctum');
-        $admin = Role::findByName('Admin', 'sanctum');
-        $writer = Role::findByName('Writer', 'sanctum');
+        $superAdmin = Role::findByName('Super Admin');
+        $admin = Role::findByName('Admin');
+        $writer = Role::findByName('Writer');
 
         $superAdmin->syncPermissions(Permission::all());
 

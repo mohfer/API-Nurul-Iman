@@ -101,7 +101,7 @@ class NewsController
         try {
             $validator = Validator::make($request->all(), [
                 'title' => 'required|string',
-                'thumbnail' => 'required|file|mimes:jpeg,png,jpg|max:2048',
+                'image' => 'required|image|mimes:jpeg,png,jpg|max:5120',
                 'content' => 'required|string',
                 'user_id' => 'required|string',
                 'category_id' => 'required|string',
@@ -114,7 +114,8 @@ class NewsController
 
             $news = News::create([
                 'title' => $request->title,
-                'thumbnail' => $request->file,
+                'image_url' => $request->image,
+                'image_name' => $request->image->getClientOriginalName(),
                 'content' => $request->content,
                 'user_id' => $request->user()->id,
                 'category_id' => $request->category_id,

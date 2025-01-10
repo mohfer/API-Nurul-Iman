@@ -32,12 +32,19 @@ class UserController
                 return $this->sendResponse([], 'No users found');
             }
 
-            Redis::setex('users.index', 3600, json_encode($users));
+            $usersData = $users->map(function ($user) {
+                return array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']), [
+                    'roles' => $user->roles->pluck('name')->toArray(),
+                    'permissions' => $user->getAllPermissions()->pluck('name')->toArray()
+                ]);
+            });
 
-            return $this->sendResponse($users, 'User fetched successfully');
+            Redis::setex('users.index', 3600, json_encode($usersData));
+
+            return $this->sendResponse($usersData, 'User fetched successfully');
         } catch (\Exception $e) {
             $requestId = $this->generateRequestId();
-            Log::error($requestId . ' ' . ' Error during fetching users: ' . $e->getMessage());
+            Log::error($requestId . ' Error during fetching users: ' . $e->getMessage());
             return $this->sendErrorWithRequestId($requestId, 'An error occurred while fetching users');
         }
     }
@@ -48,7 +55,11 @@ class UserController
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string',
                 'email' => 'required|email|unique:users',
-                'password' => 'required|min:8'
+                'password' => 'required|min:8',
+                'roles' => 'nullable|array',
+                'roles.*' => 'exists:roles,name',
+                'permissions' => 'nullable|array',
+                'permissions.*' => 'exists:permissions,name'
             ]);
 
             if ($validator->fails()) {
@@ -61,9 +72,20 @@ class UserController
                 'password' => bcrypt($request->password)
             ]);
 
+            if ($request->has('roles')) {
+                $user->assignRole($request->roles);
+            }
+
+            if ($request->has('permissions')) {
+                $user->givePermissionTo($request->permissions);
+            }
+
             event(new Registered($user));
 
-            $data = array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']));
+            $data = array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']), [
+                'roles' => $user->roles->pluck('name')->toArray(),
+                'permissions' => $user->getAllPermissions()->pluck('name')->toArray()
+            ]);
 
             Activity::all()->last();
 
@@ -86,7 +108,10 @@ class UserController
                 return $this->sendError('User not found', 404);
             }
 
-            $data = array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']));
+            $data = array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']), [
+                'roles' => $user->roles->pluck('name')->toArray(),
+                'permissions' => $user->getAllPermissions()->pluck('name')->toArray()
+            ]);
 
             return $this->sendResponse($data, 'User fetched successfully');
         } catch (\Exception $e) {
@@ -107,7 +132,11 @@ class UserController
 
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string',
-                'email' => 'required|email|' . ($user->email != $request->email ? 'unique:users' : '')
+                'email' => 'required|email|' . ($user->email != $request->email ? 'unique:users' : ''),
+                'roles' => 'nullable|array',
+                'roles.*' => 'exists:roles,name',
+                'permissions' => 'nullable|array',
+                'permissions.*' => 'exists:permissions,name'
             ]);
 
             if ($validator->fails()) {
@@ -119,7 +148,18 @@ class UserController
             $user->email = $request->email;
             $user->save();
 
-            $data = array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']));
+            if ($request->has('roles')) {
+                $user->syncRoles($request->roles);
+            }
+
+            if ($request->has('permissions')) {
+                $user->syncPermissions($request->permissions);
+            }
+
+            $data = array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']), [
+                'roles' => $user->roles->pluck('name')->toArray(),
+                'permissions' => $user->getAllPermissions()->pluck('name')->toArray()
+            ]);
 
             Activity::all()->last();
 
@@ -144,7 +184,10 @@ class UserController
 
             $user->delete();
 
-            $data = array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']));
+            $data = array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']), [
+                'roles' => $user->roles->pluck('name')->toArray(),
+                'permissions' => $user->getAllPermissions()->pluck('name')->toArray()
+            ]);
 
             Activity::all()->last();
 
@@ -173,13 +216,20 @@ class UserController
 
             $users = User::onlyTrashed()->select(['id', 'name', 'slug', 'email'])->get();
 
+            $usersData = $users->map(function ($user) {
+                return array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']), [
+                    'roles' => $user->roles->pluck('name')->toArray(),
+                    'permissions' => $user->getAllPermissions()->pluck('name')->toArray()
+                ]);
+            });
+
             if ($users->isEmpty()) {
                 return $this->sendResponse([], 'No users found');
             }
 
-            Redis::setex('users.trashed', 3600, json_encode($users));
+            Redis::setex('users.trashed', 3600, json_encode($usersData));
 
-            return $this->sendResponse($users, 'User fetched successfully');
+            return $this->sendResponse($usersData, 'User fetched successfully');
         } catch (\Exception $e) {
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during fetching trashed users: ' . $e->getMessage());
@@ -198,7 +248,10 @@ class UserController
 
             $user->restore();
 
-            $data = array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']));
+            $data = array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']), [
+                'roles' => $user->roles->pluck('name')->toArray(),
+                'permissions' => $user->getAllPermissions()->pluck('name')->toArray()
+            ]);
 
             Activity::all()->last();
 
@@ -224,9 +277,15 @@ class UserController
                 return $this->sendError('User not found', 404);
             }
 
-            $user->forceDelete();
+            $data = array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']), [
+                'roles' => $user->roles->pluck('name')->toArray(),
+                'permissions' => $user->getAllPermissions()->pluck('name')->toArray()
+            ]);
 
-            $data = array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']));
+            $user->roles()->detach();
+            $user->permissions()->detach();
+
+            $user->forceDelete();
 
             Activity::all()->last();
 
@@ -253,13 +312,20 @@ class UserController
 
                 $users = User::select(['id', 'name', 'slug', 'email'])->get();
 
+                $usersData = $users->map(function ($user) {
+                    return array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']), [
+                        'roles' => $user->roles->pluck('name')->toArray(),
+                        'permissions' => $user->getAllPermissions()->pluck('name')->toArray()
+                    ]);
+                });
+
                 if ($users->isEmpty()) {
                     return $this->sendResponse([], 'No users found');
                 }
 
-                Redis::setex('users.index', 3600, json_encode($users));
+                Redis::setex('users.index', 3600, json_encode($usersData));
 
-                return $this->sendResponse($users, 'Users fetched successfully');
+                return $this->sendResponse($usersData, 'Users fetched successfully');
             }
 
             $users = User::where('name', 'like', '%' . $request->q . '%')
@@ -268,11 +334,18 @@ class UserController
                 ->select(['id', 'name', 'slug', 'email'])
                 ->get();
 
+            $usersData = $users->map(function ($user) {
+                return array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']), [
+                    'roles' => $user->roles->pluck('name')->toArray(),
+                    'permissions' => $user->getAllPermissions()->pluck('name')->toArray()
+                ]);
+            });
+
             if ($users->isEmpty()) {
                 return $this->sendResponse([], 'No users found matching your query');
             }
 
-            return $this->sendResponse($users, 'Users fetched successfully');
+            return $this->sendResponse($usersData, 'Users fetched successfully');
         } catch (\Exception $e) {
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during searching users: ' . $e->getMessage());

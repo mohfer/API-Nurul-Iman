@@ -14,6 +14,8 @@ class Role extends SpatieRole
 
     protected $primaryKey = 'uuid';
 
+    protected $hidden = ['pivot'];
+
     protected $fillable = [
         'name'
     ];
