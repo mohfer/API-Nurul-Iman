@@ -7,6 +7,7 @@ use App\Traits\ApiResponse;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Traits\GenerateRequestId;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Spatie\Activitylog\Models\Activity;
@@ -56,6 +57,8 @@ class GalleryController
                 return $this->sendErrorWithValidation($validator->errors());
             }
 
+            DB::beginTransaction();
+
             $image = $request->file('image');
             $fileName = Str::uuid() . '.' . $image->getClientOriginalExtension();
             $filePath = env('GOOGLE_DRIVE_SUBFOLDER') . '/galleries/' . $fileName;
@@ -74,8 +77,8 @@ class GalleryController
             $gallery = Gallery::create([
                 'title' => $request->title,
                 'image_url' => $thumbnailUrl,
-                'description' => $request->description,
                 'image_name' => $fileName,
+                'description' => $request->description,
             ]);
 
             $data = array_merge(['id' => $gallery->id], $gallery->only(['title', 'image_url', 'description']));
@@ -84,8 +87,11 @@ class GalleryController
 
             Redis::del('galleries.index');
 
+            DB::commit();
+
             return $this->sendResponse($data, 'Gallery created successfully', 201);
         } catch (\Exception $e) {
+            DB::rollBack();
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during creating gallery: ' . $e->getMessage());
             return $this->sendErrorWithRequestId($requestId, 'An error occurred while creating gallery');
@@ -130,6 +136,8 @@ class GalleryController
                 return $this->sendErrorWithValidation($validator->errors());
             }
 
+            DB::beginTransaction();
+
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
                 $newFileName = Str::uuid()->toString() . '.' . $image->getClientOriginalExtension();
@@ -167,10 +175,14 @@ class GalleryController
             $data = array_merge(['id' => $gallery->id], $gallery->only(['title', 'image_url', 'description']));
 
             Activity::all()->last();
+
             Redis::del('galleries.index');
+
+            DB::commit();
 
             return $this->sendResponse($data, 'Gallery updated successfully');
         } catch (\Exception $e) {
+            DB::rollBack();
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during updating gallery: ' . $e->getMessage());
             return $this->sendErrorWithRequestId($requestId, 'An error occurred while updating gallery');
@@ -269,6 +281,8 @@ class GalleryController
                 return $this->sendError('Gallery not found', 404);
             }
 
+            DB::beginTransaction();
+
             if ($gallery->image_name) {
                 Gdrive::delete(env('GOOGLE_DRIVE_SUBFOLDER') . '/galleries/' . $gallery->image_name);
             }
@@ -281,8 +295,11 @@ class GalleryController
 
             Redis::del('galleries.trashed');
 
+            DB::commit();
+
             return $this->sendResponse($data, 'Gallery deleted permanently');
         } catch (\Exception $e) {
+            DB::rollBack();
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during force deleting gallery: ' . $e->getMessage());
             return $this->sendErrorWithRequestId($requestId, 'An error occurred while force deleting gallery');

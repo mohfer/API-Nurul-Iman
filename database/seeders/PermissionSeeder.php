@@ -20,6 +20,8 @@ class PermissionSeeder extends Seeder
         $permissions = [
             'user',
             'category',
+            'agenda',
+            'announcement',
             'news',
             'news-tag',
             'tag',
@@ -43,6 +45,8 @@ class PermissionSeeder extends Seeder
 
         $customPermissions = [
             'category',
+            'agenda',
+            'announcement',
             'news',
             'user',
             'tag',
@@ -93,6 +97,8 @@ class PermissionSeeder extends Seeder
             'news.forceDelete',
             'tag.forceDelete',
             'gallery.forceDelete',
+            'agenda.forceDelete',
+            'announcement.forceDelete',
             'log.read'
         ])->get();
         $admin->syncPermissions($adminPermissions);

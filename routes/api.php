@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AgendaController;
+use App\Http\Controllers\AnnouncementController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\AuthController;
@@ -89,6 +91,36 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
         Route::get('/{id}', [GalleryController::class, 'show'])->middleware('permission:gallery.read');
         Route::put('/{id}', [GalleryController::class, 'update'])->middleware('permission:gallery.update');
         Route::delete('/{id}', [GalleryController::class, 'destroy'])->middleware('permission:gallery.delete');
+    });
+
+    // Agenda Endpoint
+    Route::prefix('agendas')->group(function () {
+        Route::prefix('trashed')->group(function () {
+            Route::get('/', [AgendaController::class, 'trashed'])->middleware('permission:agenda.trashed');
+            Route::put('/{id}', [AgendaController::class, 'restore'])->middleware('permission:agenda.restore');
+            Route::delete('/{id}', [AgendaController::class, 'forceDelete'])->middleware('permission:agenda.forceDelete');
+        });
+        Route::get('/search', [AgendaController::class, 'search'])->middleware('permission:agenda.read');
+        Route::get('/', [AgendaController::class, 'index'])->middleware('permission:agenda.read');
+        Route::post('/', [AgendaController::class, 'store'])->middleware('permission:agenda.create');
+        Route::get('/{id}', [AgendaController::class, 'show'])->middleware('permission:agenda.read');
+        Route::put('/{id}', [AgendaController::class, 'update'])->middleware('permission:agenda.update');
+        Route::delete('/{id}', [AgendaController::class, 'destroy'])->middleware('permission:agenda.delete');
+    });
+
+    // Announcement Endpoint
+    Route::prefix('announcements')->group(function () {
+        Route::prefix('trashed')->group(function () {
+            Route::get('/', [AnnouncementController::class, 'trashed'])->middleware('permission:announcement.trashed');
+            Route::put('/{id}', [AnnouncementController::class, 'restore'])->middleware('permission:announcement.restore');
+            Route::delete('/{id}', [AnnouncementController::class, 'forceDelete'])->middleware('permission:announcement.forceDelete');
+        });
+        Route::get('/search', [AnnouncementController::class, 'search'])->middleware('permission:announcement.read');
+        Route::get('/', [AnnouncementController::class, 'index'])->middleware('permission:announcement.read');
+        Route::post('/', [AnnouncementController::class, 'store'])->middleware('permission:announcement.create');
+        Route::get('/{id}', [AnnouncementController::class, 'show'])->middleware('permission:announcement.read');
+        Route::put('/{id}', [AnnouncementController::class, 'update'])->middleware('permission:announcement.update');
+        Route::delete('/{id}', [AnnouncementController::class, 'destroy'])->middleware('permission:announcement.delete');
     });
 
     // Role Endpoint

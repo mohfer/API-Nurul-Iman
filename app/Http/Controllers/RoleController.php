@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Role;
-use App\Models\Permission;
 use App\Traits\ApiResponse;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Traits\GenerateRequestId;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Spatie\Activitylog\Models\Activity;
@@ -62,6 +61,8 @@ class RoleController
                 return $this->sendErrorWithValidation($validator->errors());
             }
 
+            DB::beginTransaction();
+
             $role = Role::create([
                 'name' => $request->name,
             ]);
@@ -78,8 +79,11 @@ class RoleController
 
             Redis::del('roles.index');
 
+            DB::commit();
+
             return $this->sendResponse($data, 'Role created successfully', 201);
         } catch (\Exception $e) {
+            DB::rollBack();
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during creating role: ' . $e->getMessage());
             return $this->sendErrorWithRequestId($requestId, 'An error occurred while creating role');
@@ -126,6 +130,8 @@ class RoleController
                 return $this->sendErrorWithValidation($validator->errors());
             }
 
+            DB::beginTransaction();
+
             $role->name = $request->name;
             $role->save();
 
@@ -141,8 +147,11 @@ class RoleController
 
             Redis::del('roles.index');
 
+            DB::commit();
+
             return $this->sendResponse($data, 'Role updated successfully');
         } catch (\Exception $e) {
+            DB::rollBack();
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during updating role: ' . $e->getMessage());
             return $this->sendErrorWithRequestId($requestId, 'An error occurred while updating role');
@@ -162,6 +171,8 @@ class RoleController
                 'permissions' => $role->getAllPermissions()->pluck('name')->toArray()
             ]);
 
+            DB::beginTransaction();
+
             if ($role->permissions->isNotEmpty()) {
                 $role->syncPermissions([]);
             }
@@ -172,8 +183,11 @@ class RoleController
 
             Redis::del('roles.index');
 
+            DB::commit();
+
             return $this->sendResponse($data, 'Role deleted successfully and permissions revoked');
         } catch (\Exception $e) {
+            DB::rollBack();
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during deleting role: ' . $e->getMessage());
             return $this->sendErrorWithRequestId($requestId, 'An error occurred while deleting role');

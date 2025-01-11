@@ -254,7 +254,6 @@ class TagController
             }
 
             $tags = Tag::where('tag', 'like', '%' . $request->q . '%')
-                ->orWhere('slug', 'like', '%' . $request->q . '%')
                 ->select(['id', 'tag', 'slug'])
                 ->get();
 

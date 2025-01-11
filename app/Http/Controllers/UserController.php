@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Traits\GenerateRequestId;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Auth\Events\Registered;
@@ -66,6 +67,8 @@ class UserController
                 return $this->sendErrorWithValidation($validator->errors());
             }
 
+            DB::beginTransaction();
+
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -91,8 +94,11 @@ class UserController
 
             Redis::del('users.index');
 
+            DB::commit();
+
             return $this->sendResponse($data, 'User created successfully', 201);
         } catch (\Exception $e) {
+            DB::rollBack();
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during creating user: ' . $e->getMessage());
             return $this->sendErrorWithRequestId($requestId, 'An error occurred while creating user');
@@ -143,6 +149,8 @@ class UserController
                 return $this->sendErrorWithValidation($validator->errors());
             }
 
+            DB::beginTransaction();
+
             $user->slug = null;
             $user->name = $request->name;
             $user->email = $request->email;
@@ -165,8 +173,11 @@ class UserController
 
             Redis::del('users.index');
 
+            DB::commit();
+
             return $this->sendResponse($data, 'User updated successfully');
         } catch (\Exception $e) {
+            DB::rollBack();
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during updating user: ' . $e->getMessage());
             return $this->sendErrorWithRequestId($requestId, 'An error occurred while updating user');
@@ -282,6 +293,8 @@ class UserController
                 'permissions' => $user->getAllPermissions()->pluck('name')->toArray()
             ]);
 
+            DB::beginTransaction();
+
             $user->roles()->detach();
             $user->permissions()->detach();
 
@@ -291,8 +304,11 @@ class UserController
 
             Redis::del('users.trashed');
 
+            DB::commit();
+
             return $this->sendResponse($data, 'User deleted permanently');
         } catch (\Exception $e) {
+            DB::rollBack();
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during force deleting user: ' . $e->getMessage());
             return $this->sendErrorWithRequestId($requestId, 'An error occurred while force deleting user');
