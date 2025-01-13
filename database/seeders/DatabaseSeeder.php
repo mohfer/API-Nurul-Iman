@@ -2,12 +2,11 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Database\Seeders\TagSeeder;
+use App\Models\Category;
+use App\Models\News;
+use App\Models\NewsTag;
+use App\Models\User;
 use Illuminate\Database\Seeder;
-use Database\Seeders\UserSeeder;
-use Database\Seeders\CategorySeeder;
-use Database\Seeders\PermissionSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -20,10 +19,15 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             PermissionSeeder::class,
-            UserSeeder::class,
             CategorySeeder::class,
-            TagSeeder::class
+            UserSeeder::class,
+            TagSeeder::class,
         ]);
+
+        // News::factory(10)->create();
+        // NewsTag::factory(10)->create();
+        // User::factory(10)->create();
+        // Category::factory(10)->create();
 
         activity()->enableLogging();
     }

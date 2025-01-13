@@ -6,11 +6,15 @@ use App\Models\News;
 use App\Models\NewsTag;
 use App\Models\Category;
 use App\Traits\ApiResponse;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Traits\GenerateRequestId;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Validator;
+use Yaza\LaravelGoogleDriveStorage\Gdrive;
 
 class NewsController
 {
@@ -19,6 +23,36 @@ class NewsController
     public function index()
     {
         try {
+            $cached = Redis::get('news.index');
+
+            if ($cached) {
+                $news = json_decode($cached);
+                return $this->sendResponse($news, 'news fetched successfully from cache');
+            }
+
+            $newsData = News::with('user', 'category', 'tags')
+                ->select(['id', 'title', 'slug', 'image_url', 'content', 'user_id', 'category_id', 'is_published', 'published_at'])
+                ->get()
+                ->map(fn($news) => [
+                    'id' => $news->id,
+                    'title' => Str::limit($news->title, 20),
+                    'slug' => $news->slug,
+                    'image_url' => $news->image_url,
+                    'content' => Str::limit($news->content, 50),
+                    'is_published' => $news->is_published,
+                    'published_at' => $news->published_at,
+                    'author' => $news->user->name,
+                    'category' => $news->category->category,
+                    'tags' => $news->tags->pluck('tag')->toArray(),
+                ]);
+
+            if ($newsData->isEmpty()) {
+                return $this->sendResponse([], 'No news found');
+            }
+
+            Redis::setex('news.index', 3600, json_encode($newsData));
+
+            return $this->sendResponse($newsData, 'news fetched successfully');
         } catch (\Exception $e) {
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during fetching news: ' . $e->getMessage());
@@ -29,7 +63,76 @@ class NewsController
     public function store(Request $request)
     {
         try {
+            $validator = Validator::make($request->all(), [
+                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+                'title' => 'required|string',
+                'content' => 'required|string',
+                'category_id' => 'required|string',
+                'tags' => 'nullable|array',
+                'tags.*' => 'exists:tags,id',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendErrorWithValidation($validator->errors());
+            }
+
+            DB::beginTransaction();
+
+            $image = $request->file('image');
+            $fileName = Str::uuid() . '.' . $image->getClientOriginalExtension();
+            $filePath = env('GOOGLE_DRIVE_SUBFOLDER') . '/news/images/' . $fileName;
+
+            Gdrive::put($filePath, $image);
+
+            $fileMetadata = collect(Gdrive::all(env('GOOGLE_DRIVE_SUBFOLDER') . '/news/images/'))
+                ->firstWhere('extra_metadata.name', $fileName);
+
+            if (!$fileMetadata) {
+                throw new \Exception("The metadata file was not found in Google Drive.");
+            }
+
+            $thumbnailUrl = env('GOOGLE_DRIVE_URL') . $fileMetadata['extra_metadata']['id'];
+
+            $news = News::create([
+                'title' => $request->title,
+                'image_url' => $thumbnailUrl,
+                'image_name' => $fileName,
+                'content' => $request->content,
+                'user_id' => $request->user()->id,
+                'category_id' => $request->category_id,
+                'is_published' => true,
+                'published_at' => now()
+            ]);
+
+            foreach ($request->tags as $tagId) {
+                NewsTag::create([
+                    'news_id' => $news->id,
+                    'tag_id' => $tagId
+                ]);
+            }
+
+            $data = [
+                'id' => $news->id,
+                'title' => Str::limit($news->title, 20),
+                'slug' => $news->slug,
+                'image_url' => $news->image_url,
+                'content' => Str::limit($news->content, 50),
+                'is_published' => $news->is_published,
+                'published_at' => $news->published_at,
+                'author' => $news->user->name,
+                'category' => $news->category->category,
+                'tags' => $news->tags->pluck('tag')->toArray(),
+            ];
+
+            Activity::all()->last();
+
+            Redis::del('news.index');
+
+            DB::commit();
+
+            return $this->sendResponse($data, 'News created successfully', 201);
         } catch (\Exception $e) {
+            DB::rollback();
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during creating news: ' . $e->getMessage());
             return $this->sendErrorWithRequestId($requestId, 'An error occurred while creating news');
@@ -39,6 +142,26 @@ class NewsController
     public function show($id)
     {
         try {
+            $news = News::find($id);
+
+            if (!$news) {
+                return $this->sendError('News not found', 404);
+            }
+
+            $data = [
+                'id' => $news->id,
+                'title' => $news->title,
+                'slug' => $news->slug,
+                'image_url' => $news->image_url,
+                'content' => $news->content,
+                'is_published' => $news->is_published,
+                'published_at' => $news->published_at,
+                'author' => $news->user->name,
+                'category' => $news->category->category,
+                'tags' => $news->tags->pluck('tag')->toArray(),
+            ];
+
+            return $this->sendResponse($data, 'News fetched successfully');
         } catch (\Exception $e) {
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during showing news: ' . $e->getMessage());

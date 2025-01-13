@@ -7,13 +7,15 @@ use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Tag extends Model
 {
-    use Sluggable, LogsActivity, SoftDeletes, HasUuids;
+    use HasFactory, Sluggable, LogsActivity, SoftDeletes, HasUuids;
 
     protected $table = 'tags';
 
@@ -22,9 +24,9 @@ class Tag extends Model
         'slug'
     ];
 
-    public function news_tags(): HasMany
+    public function news(): BelongsToMany
     {
-        return $this->hasMany(NewsTag::class, 'tag_id');
+        return $this->belongsToMany(News::class, 'news_tags', 'tag_id', 'news_id');
     }
 
     public function sluggable(): array
