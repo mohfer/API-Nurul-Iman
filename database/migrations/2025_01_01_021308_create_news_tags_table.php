@@ -12,12 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('news_tags', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->foreignUuid('news_id')->references('id')->on('news')->onDelete('cascade');
-            $table->foreignUuid('tag_id')->references('id')->on('tags')->onDelete('cascade');
-            $table->timestamps();
-
-            $table->index(['news_id', 'tag_id']);
+            $table->uuid('news_id');
+            $table->uuid('tag_id');
+            
+            $table->primary(['news_id', 'tag_id']);
         });
     }
 

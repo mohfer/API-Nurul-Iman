@@ -143,8 +143,9 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
         Route::prefix('draft')->group(function () {
             Route::post('/', [NewsController::class, 'draftNews'])->middleware('permission:news.create');
             Route::get('/', [NewsController::class, 'showDraftNews'])->middleware('permission:news.read');
+            Route::put('/{id}', [NewsController::class, 'published'])->middleware('permission:news.update');
         });
-        Route::patch('/{id}', [NewsController::class, 'published'])->middleware('permission:news.update');
+        Route::get('/search', [NewsController::class, 'search'])->middleware('permission:news.read');
         Route::get('/', [NewsController::class, 'index'])->middleware('permission:news.read');
         Route::post('/', [NewsController::class, 'store'])->middleware('permission:news.create');
         Route::get('/{id}', [NewsController::class, 'show'])->middleware('permission:news.read');
