@@ -23,9 +23,9 @@ class NewsFactory extends Factory
             'image_url' => $this->faker->imageUrl(),
             'image_name' => $this->faker->word(),
             'content' => $this->faker->paragraph(10),
-            'user_id' => User::factory()->create()->id,
-            'category_id' => Category::factory()->create()->id,
-            'is_published' => $this->faker->boolean(),
+            'user_id' => User::factory(),
+            'category_id' => Category::factory(),
+            'is_published' => true,
             'published_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
         ];
     }

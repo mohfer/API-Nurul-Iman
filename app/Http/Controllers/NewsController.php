@@ -16,6 +16,8 @@ use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Validator;
 use Yaza\LaravelGoogleDriveStorage\Gdrive;
 
+use function PHPSTORM_META\map;
+
 class NewsController
 {
     use ApiResponse, GenerateRequestId;
@@ -67,7 +69,7 @@ class NewsController
                 'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
                 'title' => 'required|string',
                 'content' => 'required|string',
-                'category_id' => 'required|string',
+                'category_id' => 'required|string|exists:categories,id',
                 'tags' => 'nullable|array',
                 'tags.*' => 'exists:tags,id',
             ]);
@@ -184,7 +186,7 @@ class NewsController
                 'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
                 'title' => 'required|string',
                 'content' => 'required|string',
-                'category_id' => 'required|string',
+                'category_id' => 'required|string|exists:categories,id',
                 'tags' => 'nullable|array',
                 'tags.*' => 'exists:tags,id',
             ]);
@@ -511,7 +513,7 @@ class NewsController
                 'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
                 'title' => 'required|string',
                 'content' => 'required|string',
-                'category_id' => 'required|string',
+                'category_id' => 'required|string|exists:categories,id',
                 'tags' => 'nullable|array',
                 'tags.*' => 'exists:tags,id',
             ]);
@@ -639,7 +641,7 @@ class NewsController
                 'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
                 'title' => 'required|string',
                 'content' => 'required|string',
-                'category_id' => 'required|string',
+                'category_id' => 'required|string|exists:categories,id',
                 'tags' => 'nullable|array',
                 'tags.*' => 'exists:tags,id',
             ]);
@@ -727,6 +729,28 @@ class NewsController
     public function showByAuthor(Request $request)
     {
         try {
+            $news = News::with('user', 'category', 'tags')
+                ->where('is_published', true)
+                ->whereHas('user', fn($query) => $query->where('slug', $request->slug))
+                ->get()
+                ->map(fn($news) => [
+                    'id' => $news->id,
+                    'title' => Str::limit($news->title, 20),
+                    'slug' => $news->slug,
+                    'image_url' => $news->image_url,
+                    'content' => Str::limit($news->content, 50),
+                    'is_published' => $news->is_published,
+                    'published_at' => $news->published_at,
+                    'author' => $news->user->name,
+                    'category' => $news->category->category,
+                    'tags' => $news->tags->pluck('tag')->toArray(),
+                ]);
+
+            if ($news->isEmpty()) {
+                return $this->sendError('News by author ' . $request->slug . ' not found', 404);
+            }
+
+            return $this->sendResponse($news, 'News by author ' . $request->slug . ' fetched successfully');
         } catch (\Exception $e) {
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during fetching news by author: ' . $e->getMessage());
@@ -737,35 +761,28 @@ class NewsController
     public function showByCategory(Request $request)
     {
         try {
-            $category = Category::with(['news.news_tags.tag', 'news.user', 'news.category'])->where('slug', $request->slug)->first();
-            $news = $category->news;
-            $newsTags = $news->pluck('news_tags')->flatten();
-            $newsDetails = $news->where('is_published', true);
+            $news = News::with('user', 'category', 'tags')
+                ->where('is_published', true)
+                ->whereHas('category', fn($query) => $query->where('slug', $request->slug))
+                ->get()
+                ->map(fn($news) => [
+                    'id' => $news->id,
+                    'title' => Str::limit($news->title, 20),
+                    'slug' => $news->slug,
+                    'image_url' => $news->image_url,
+                    'content' => Str::limit($news->content, 50),
+                    'is_published' => $news->is_published,
+                    'published_at' => $news->published_at,
+                    'author' => $news->user->name,
+                    'category' => $news->category->category,
+                    'tags' => $news->tags->pluck('tag')->toArray(),
+                ]);
 
-            if (!$newsDetails) {
-                return $this->sendError('News with category ' . $category->name . ' not found', 404);
+            if ($news->isEmpty()) {
+                return $this->sendError('News by category ' . $request->slug . ' not found', 404);
             }
 
-            $tags = [];
-            foreach ($newsTags as $newsTag) {
-                $tags[] = [
-                    'id' => $newsTag->tag->id,
-                    'tag' => $newsTag->tag->tag,
-                    'slug' => $newsTag->tag->slug
-                ];
-            }
-
-            $data = [
-                'id' => $newsDetails->id,
-                'title' => $newsDetails->title,
-                'thumbnail' => $newsDetails->thumbnail,
-                'content' => $newsDetails->content,
-                'author' => $newsDetails->user->name,
-                'category' => $newsDetails->category->category,
-                'tags' => $tags
-            ];
-
-            return $this->sendResponse($data, 'News fetched successfully');
+            return $this->sendResponse($news, 'News by category ' . $request->slug . ' fetched successfully');
         } catch (\Exception $e) {
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during fetching news by category: ' . $e->getMessage());
@@ -776,6 +793,28 @@ class NewsController
     public function showByTag(Request $request)
     {
         try {
+            $news = News::with('user', 'category', 'tags')
+                ->where('is_published', true)
+                ->whereHas('tags', fn($query) => $query->where('slug', $request->slug))
+                ->get()
+                ->map(fn($news) => [
+                    'id' => $news->id,
+                    'title' => Str::limit($news->title, 20),
+                    'slug' => $news->slug,
+                    'image_url' => $news->image_url,
+                    'content' => Str::limit($news->content, 50),
+                    'is_published' => $news->is_published,
+                    'published_at' => $news->published_at,
+                    'author' => $news->user->name,
+                    'category' => $news->category->category,
+                    'tags' => $news->tags->pluck('tag')->toArray(),
+                ]);
+
+            if ($news->isEmpty()) {
+                return $this->sendError('News by tag ' . $request->slug . ' not found', 404);
+            }
+
+            return $this->sendResponse($news, 'News by tag ' . $request->slug . ' fetched successfully');
         } catch (\Exception $e) {
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during fetching news by tag: ' . $e->getMessage());

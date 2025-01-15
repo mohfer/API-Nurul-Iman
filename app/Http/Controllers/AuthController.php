@@ -23,7 +23,7 @@ class AuthController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'email' => 'required|email',
+                'email' => 'required|email|exists:users',
                 'password' => 'required|min:8',
                 'remember_me' => 'required|boolean'
             ]);
@@ -141,7 +141,7 @@ class AuthController
         try {
             $validator = Validator::make($request->all(), [
                 'token' => 'required',
-                'email' => 'required|email',
+                'email' => 'required|email|exists:users',
                 'password' => 'required|min:8|confirmed',
             ]);
 
