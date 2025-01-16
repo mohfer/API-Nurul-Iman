@@ -458,10 +458,10 @@ class NewsController
                 $news = $news->map(function ($news) {
                     return [
                         'id' => $news->id,
-                        'title' => $news->title,
+                        'title' => Str::limit($news->title, 20),
                         'slug' => $news->slug,
                         'image_url' => $news->image_url ?? null,
-                        'content' => $news->content,
+                        'content' => Str::limit($news->content, 50),
                         'is_published' => $news->is_published,
                         'published_at' => $news->published_at,
                         'author' => $news->user->name,
@@ -486,10 +486,10 @@ class NewsController
             $news = $news->map(function ($news) {
                 return [
                     'id' => $news->id,
-                    'title' => $news->title,
+                    'title' => Str::limit($news->title, 20),
                     'slug' => $news->slug,
                     'image_url' => $news->image_url ?? null,
-                    'content' => $news->content,
+                    'content' => Str::limit($news->content, 50),
                     'is_published' => $news->is_published,
                     'published_at' => $news->published_at,
                     'author' => $news->user->name,
@@ -726,12 +726,12 @@ class NewsController
         }
     }
 
-    public function showByAuthor(Request $request)
+    public function showByAuthor($slug)
     {
         try {
             $news = News::with('user', 'category', 'tags')
                 ->where('is_published', true)
-                ->whereHas('user', fn($query) => $query->where('slug', $request->slug))
+                ->whereHas('user', fn($query) => $query->where('slug', $slug))
                 ->get()
                 ->map(fn($news) => [
                     'id' => $news->id,
@@ -747,10 +747,10 @@ class NewsController
                 ]);
 
             if ($news->isEmpty()) {
-                return $this->sendError('News by author ' . $request->slug . ' not found', 404);
+                return $this->sendError('News by author ' . $slug . ' not found', 404);
             }
 
-            return $this->sendResponse($news, 'News by author ' . $request->slug . ' fetched successfully');
+            return $this->sendResponse($news, 'News by author ' . $slug . ' fetched successfully');
         } catch (\Exception $e) {
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during fetching news by author: ' . $e->getMessage());
@@ -758,12 +758,12 @@ class NewsController
         }
     }
 
-    public function showByCategory(Request $request)
+    public function showByCategory($slug)
     {
         try {
             $news = News::with('user', 'category', 'tags')
                 ->where('is_published', true)
-                ->whereHas('category', fn($query) => $query->where('slug', $request->slug))
+                ->whereHas('category', fn($query) => $query->where('slug', $slug))
                 ->get()
                 ->map(fn($news) => [
                     'id' => $news->id,
@@ -779,10 +779,10 @@ class NewsController
                 ]);
 
             if ($news->isEmpty()) {
-                return $this->sendError('News by category ' . $request->slug . ' not found', 404);
+                return $this->sendError('News by category ' . $slug . ' not found', 404);
             }
 
-            return $this->sendResponse($news, 'News by category ' . $request->slug . ' fetched successfully');
+            return $this->sendResponse($news, 'News by category ' . $slug . ' fetched successfully');
         } catch (\Exception $e) {
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during fetching news by category: ' . $e->getMessage());
@@ -790,12 +790,12 @@ class NewsController
         }
     }
 
-    public function showByTag(Request $request)
+    public function showByTag($slug)
     {
         try {
             $news = News::with('user', 'category', 'tags')
                 ->where('is_published', true)
-                ->whereHas('tags', fn($query) => $query->where('slug', $request->slug))
+                ->whereHas('tags', fn($query) => $query->where('slug', $slug))
                 ->get()
                 ->map(fn($news) => [
                     'id' => $news->id,
@@ -811,14 +811,46 @@ class NewsController
                 ]);
 
             if ($news->isEmpty()) {
-                return $this->sendError('News by tag ' . $request->slug . ' not found', 404);
+                return $this->sendError('News by tag ' . $slug . ' not found', 404);
             }
 
-            return $this->sendResponse($news, 'News by tag ' . $request->slug . ' fetched successfully');
+            return $this->sendResponse($news, 'News by tag ' . $slug . ' fetched successfully');
         } catch (\Exception $e) {
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during fetching news by tag: ' . $e->getMessage());
             return $this->sendErrorWithRequestId($requestId, 'An error occurred while fetching news by tag');
+        }
+    }
+
+    public function singleNews($slug)
+    {
+        try {
+            $news = News::with('user', 'category', 'tags')
+                ->where('is_published', true)
+                ->where('slug', $slug)
+                ->get()
+                ->map(fn($news) => [
+                    'id' => $news->id,
+                    'title' => $news->title,
+                    'slug' => $news->slug,
+                    'image_url' => $news->image_url,
+                    'content' => $news->content,
+                    'is_published' => $news->is_published,
+                    'published_at' => $news->published_at,
+                    'author' => $news->user->name,
+                    'category' => $news->category->category,
+                    'tags' => $news->tags->pluck('tag')->toArray(),
+                ]);
+
+            if (!$news) {
+                return $this->sendError('News not found', 404);
+            }
+
+            return $this->sendResponse($news, 'News fetched successfully');
+        } catch (\Exception $e) {
+            $requestId = $this->generateRequestId();
+            Log::error($requestId . ' ' . ' Error during fetching news: ' . $e->getMessage());
+            return $this->sendErrorWithRequestId($requestId, 'An error occurred while fetching news');
         }
     }
 }

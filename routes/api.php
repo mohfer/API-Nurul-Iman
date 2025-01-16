@@ -15,34 +15,53 @@ use App\Http\Controllers\CategoryController;
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 
+    // Email Verification
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verificationEmail'])->middleware(['signed'])->name('verification.verify');
         Route::post('/email/verification-notification', [AuthController::class, 'resendVerificationEmail'])->middleware(['throttle:6,1'])->name('verification.send');
         Route::post('/change-password', [AuthController::class, 'changePassword']);
     });
 
+    // Password Reset
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('guest')->name('password.email');
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('guest')->name('password.update');
 });
 
 // Category Endpoint
-Route::get('/categories', [CategoryController::class, 'index']);
+Route::prefix('categories')->group(function () {
+    Route::get('/', [CategoryController::class, 'index']);
+    Route::get('/search', [CategoryController::class, 'search']);
+});
 
 // Tag Endpoint
-Route::get('/tags', [TagController::class, 'index']);
+Route::prefix('tags')->group(function () {
+    Route::get('/', [TagController::class, 'index']);
+    Route::get('/search', [TagController::class, 'search']);
+});
 
 // Gallery Endpoint
-Route::get('/galleries', [GalleryController::class, 'index']);
+Route::prefix('galleries')->group(function () {
+    Route::get('/', [GalleryController::class, 'index']);
+    Route::get('/search', [GalleryController::class, 'search']);
+});
 
 // Agenda Endpoint
-Route::get('/agendas', [AgendaController::class, 'index']);
+Route::prefix('agendas')->group(function () {
+    Route::get('/', [AgendaController::class, 'index']);
+    Route::get('/search', [AgendaController::class, 'search']);
+});
 
 // Announcement Endpoint
-Route::get('/announcements', [AnnouncementController::class, 'index']);
+Route::prefix('announcements')->group(function () {
+    Route::get('/', [AnnouncementController::class, 'index']);
+    Route::get('/search', [AnnouncementController::class, 'search']);
+});
 
 // News Endpoint
 Route::prefix('news')->group(function () {
     Route::get('/', [NewsController::class, 'index']);
+    Route::get('/search', [NewsController::class, 'search']);
+    Route::get('/read/{slug}', [NewsController::class, 'singleNews']);
     Route::get('/author/{slug}', [NewsController::class, 'showByAuthor']);
     Route::get('/category/{slug}', [NewsController::class, 'showByCategory']);
     Route::get('/tag/{slug}', [NewsController::class, 'showByTag']);
@@ -73,7 +92,6 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
             Route::put('/{id}', [CategoryController::class, 'restore'])->middleware('permission:category.restore');
             Route::delete('/{id}', [CategoryController::class, 'forceDelete'])->middleware('permission:category.forceDelete');
         });
-        Route::get('/search', [CategoryController::class, 'search'])->middleware('permission:category.read');
         Route::post('/', [CategoryController::class, 'store'])->middleware('permission:category.create');
         Route::get('/{id}', [CategoryController::class, 'show'])->middleware('permission:category.read');
         Route::put('/{id}', [CategoryController::class, 'update'])->middleware('permission:category.update');
@@ -87,7 +105,6 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
             Route::put('/{id}', [TagController::class, 'restore'])->middleware('permission:tag.restore');
             Route::delete('/{id}', [TagController::class, 'forceDelete'])->middleware('permission:tag.forceDelete');
         });
-        Route::get('/search', [TagController::class, 'search'])->middleware('permission:tag.read');
         Route::post('/', [TagController::class, 'store'])->middleware('permission:tag.create');
         Route::get('/{id}', [TagController::class, 'show'])->middleware('permission:tag.read');
         Route::put('/{id}', [TagController::class, 'update'])->middleware('permission:tag.update');
@@ -101,7 +118,6 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
             Route::put('/{id}', [GalleryController::class, 'restore'])->middleware('permission:gallery.restore');
             Route::delete('/{id}', [GalleryController::class, 'forceDelete'])->middleware('permission:gallery.forceDelete');
         });
-        Route::get('/search', [GalleryController::class, 'search'])->middleware('permission:gallery.read');
         Route::post('/', [GalleryController::class, 'store'])->middleware('permission:gallery.create');
         Route::get('/{id}', [GalleryController::class, 'show'])->middleware('permission:gallery.read');
         Route::put('/{id}', [GalleryController::class, 'update'])->middleware('permission:gallery.update');
@@ -115,7 +131,6 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
             Route::put('/{id}', [AgendaController::class, 'restore'])->middleware('permission:agenda.restore');
             Route::delete('/{id}', [AgendaController::class, 'forceDelete'])->middleware('permission:agenda.forceDelete');
         });
-        Route::get('/search', [AgendaController::class, 'search'])->middleware('permission:agenda.read');
         Route::post('/', [AgendaController::class, 'store'])->middleware('permission:agenda.create');
         Route::get('/{id}', [AgendaController::class, 'show'])->middleware('permission:agenda.read');
         Route::put('/{id}', [AgendaController::class, 'update'])->middleware('permission:agenda.update');
@@ -129,7 +144,6 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
             Route::put('/{id}', [AnnouncementController::class, 'restore'])->middleware('permission:announcement.restore');
             Route::delete('/{id}', [AnnouncementController::class, 'forceDelete'])->middleware('permission:announcement.forceDelete');
         });
-        Route::get('/search', [AnnouncementController::class, 'search'])->middleware('permission:announcement.read');
         Route::get('/', [AnnouncementController::class, 'index'])->middleware('permission:announcement.read');
         Route::post('/', [AnnouncementController::class, 'store'])->middleware('permission:announcement.create');
         Route::get('/{id}', [AnnouncementController::class, 'show'])->middleware('permission:announcement.read');
@@ -159,8 +173,6 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
             Route::get('/', [NewsController::class, 'showDraftNews'])->middleware('permission:news.read');
             Route::put('/{id}', [NewsController::class, 'published'])->middleware('permission:news.update');
         });
-        Route::get('/search', [NewsController::class, 'search'])->middleware('permission:news.read');
-        Route::get('/', [NewsController::class, 'index'])->middleware('permission:news.read');
         Route::post('/', [NewsController::class, 'store'])->middleware('permission:news.create');
         Route::get('/{id}', [NewsController::class, 'show'])->middleware('permission:news.read');
         Route::put('/{id}', [NewsController::class, 'update'])->middleware('permission:news.update');
