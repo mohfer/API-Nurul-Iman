@@ -1,15 +1,16 @@
 <?php
 
-use App\Http\Controllers\AgendaController;
-use App\Http\Controllers\AnnouncementController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AgendaController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\FacilityController;
+use App\Http\Controllers\AnnouncementController;
 
 // Auth Endpoint
 Route::prefix('auth')->group(function () {
@@ -43,6 +44,12 @@ Route::prefix('tags')->group(function () {
 Route::prefix('galleries')->group(function () {
     Route::get('/', [GalleryController::class, 'index']);
     Route::get('/search', [GalleryController::class, 'search']);
+});
+
+// Facility Endpoint
+Route::prefix('facilities')->group(function () {
+    Route::get('/', [FacilityController::class, 'index']);
+    Route::get('/search', [FacilityController::class, 'search']);
 });
 
 // Agenda Endpoint
@@ -122,6 +129,19 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
         Route::get('/{id}', [GalleryController::class, 'show'])->middleware('permission:gallery.read');
         Route::put('/{id}', [GalleryController::class, 'update'])->middleware('permission:gallery.update');
         Route::delete('/{id}', [GalleryController::class, 'destroy'])->middleware('permission:gallery.delete');
+    });
+
+    // Facility Endpoint
+    Route::prefix('facilities')->group(function () {
+        Route::prefix('trashed')->group(function () {
+            Route::get('/', [FacilityController::class, 'trashed'])->middleware('permission:facility.trashed');
+            Route::put('/{id}', [FacilityController::class, 'restore'])->middleware('permission:facility.restore');
+            Route::delete('/{id}', [FacilityController::class, 'forceDelete'])->middleware('permission:facility.forceDelete');
+        });
+        Route::post('/', [FacilityController::class, 'store'])->middleware('permission:facility.create');
+        Route::get('/{id}', [FacilityController::class, 'show'])->middleware('permission:facility.read');
+        Route::put('/{id}', [FacilityController::class, 'update'])->middleware('permission:facility.update');
+        Route::delete('/{id}', [FacilityController::class, 'destroy'])->middleware('permission:facility.delete');
     });
 
     // Agenda Endpoint

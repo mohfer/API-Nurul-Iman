@@ -26,6 +26,7 @@ class PermissionSeeder extends Seeder
             'news-tag',
             'tag',
             'gallery',
+            'facility',
             'role',
             'permission'
         ];
@@ -51,6 +52,7 @@ class PermissionSeeder extends Seeder
             'user',
             'tag',
             'gallery',
+            'facility'
         ];
 
         $customActions = [
