@@ -120,5 +120,12 @@ class PermissionSeeder extends Seeder
             'password' => bcrypt('password'),
             'email_verified_at' => now()
         ])->assignRole('Admin');
+
+        User::create([
+            'name' => 'Writer',
+            'email' => 'writer@admin.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ])->assignRole('Writer');
     }
 }
