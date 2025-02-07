@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
 use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Traits\GenerateRequestId;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
