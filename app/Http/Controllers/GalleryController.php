@@ -28,7 +28,7 @@ class GalleryController
                 return $this->sendResponse($galleries, 'Gallery fetched successfully from cache');
             }
 
-            $galleries = Gallery::select(['id', 'title', 'image_url', 'description'])->get();
+            $galleries = Gallery::select(['id', 'title', 'image_url', 'description'])->orderBy('title', 'asc')->get();
 
             if ($galleries->isEmpty()) {
                 return $this->sendResponse([], 'No galleries found');
@@ -228,7 +228,7 @@ class GalleryController
                 return $this->sendResponse($galleries, 'Gallery fetched successfully from cache');
             }
 
-            $galleries = Gallery::onlyTrashed()->select(['id', 'title', 'image_url', 'description'])->get();
+            $galleries = Gallery::onlyTrashed()->select(['id', 'title', 'image_url', 'description'])->orderBy('title', 'asc')->get();
 
             if ($galleries->isEmpty()) {
                 return $this->sendResponse([], 'No galleries found');

@@ -25,7 +25,7 @@ class CategoryController
                 return $this->sendResponse($categories, 'Category fetched successfully from cache');
             }
 
-            $categories = Category::select(['id', 'category', 'slug'])->get();
+            $categories = Category::select(['id', 'category', 'slug'])->orderBy('category', 'asc')->get();
 
             if ($categories->isEmpty()) {
                 return $this->sendResponse([], 'No categories found');
@@ -162,7 +162,7 @@ class CategoryController
                 return $this->sendResponse($categories, 'Category fetched successfully from cache');
             }
 
-            $categories = Category::onlyTrashed()->select(['id', 'category', 'slug'])->get();
+            $categories = Category::onlyTrashed()->select(['id', 'category', 'slug'])->orderBy('category', 'asc')->get();
 
             if ($categories->isEmpty()) {
                 return $this->sendResponse([], 'No categories found');

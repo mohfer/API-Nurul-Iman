@@ -26,7 +26,7 @@ class RoleController
                 return $this->sendResponse($roles, 'Role fetched successfully from cache');
             }
 
-            $roles = Role::select(['uuid', 'name'])->get();
+            $roles = Role::select(['uuid', 'name'])->orderBy('name', 'asc')->get();
 
             $rolesData = $roles->map(function ($role) {
                 return array_merge(['uuid' => $role->uuid], $role->only($role->getFillable()), [

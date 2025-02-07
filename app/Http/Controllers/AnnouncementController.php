@@ -25,7 +25,7 @@ class AnnouncementController
                 return $this->sendResponse($announcements, 'Announcement fetched successfully from cache');
             }
 
-            $announcements = Announcement::select(['id', 'title', 'slug', 'description', 'created_at'])->get();
+            $announcements = Announcement::select(['id', 'title', 'slug', 'description', 'created_at'])->orderBy('created_at', 'desc')->get();
 
             if ($announcements->isEmpty()) {
                 return $this->sendResponse([], 'No announcements found');
@@ -166,7 +166,7 @@ class AnnouncementController
                 return $this->sendResponse($announcements, 'Announcement fetched successfully from cache');
             }
 
-            $announcements = Announcement::onlyTrashed()->select(['id', 'title', 'slug', 'description', 'created_at'])->get();
+            $announcements = Announcement::onlyTrashed()->select(['id', 'title', 'slug', 'description', 'created_at'])->orderBy('created_at', 'desc')->get();
 
             if ($announcements->isEmpty()) {
                 return $this->sendResponse([], 'No announcements found');

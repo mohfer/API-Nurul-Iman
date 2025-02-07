@@ -25,7 +25,7 @@ class TagController
                 return $this->sendResponse($tags, 'Tag fetched successfully from cache');
             }
 
-            $tags = Tag::select(['id', 'tag', 'slug'])->get();
+            $tags = Tag::select(['id', 'tag', 'slug'])->orderBy('tag', 'asc')->get();
 
             if ($tags->isEmpty()) {
                 return $this->sendResponse([], 'No tags found');
@@ -162,7 +162,7 @@ class TagController
                 return $this->sendResponse($tags, 'Tag fetched successfully from cache');
             }
 
-            $tags = Tag::onlyTrashed()->select(['id', 'tag', 'slug'])->get();
+            $tags = Tag::onlyTrashed()->select(['id', 'tag', 'slug'])->orderBy('tag', 'asc')->get();
 
             if ($tags->isEmpty()) {
                 return $this->sendResponse([], 'No tags found');

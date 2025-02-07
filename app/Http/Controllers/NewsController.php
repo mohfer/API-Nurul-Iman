@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\News;
-use App\Models\NewsTag;
-use App\Models\Category;
 use App\Traits\ApiResponse;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -15,8 +13,6 @@ use Illuminate\Support\Facades\Redis;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Validator;
 use Yaza\LaravelGoogleDriveStorage\Gdrive;
-
-use function PHPSTORM_META\map;
 
 class NewsController
 {
@@ -34,6 +30,7 @@ class NewsController
 
             $newsData = News::with('user', 'category', 'tags')
                 ->where('is_published', true)
+                ->orderBy('published_at', 'desc')
                 ->get()
                 ->map(fn($news) => [
                     'id' => $news->id,
@@ -319,7 +316,7 @@ class NewsController
                 return $this->sendResponse($news, 'news fetched successfully from cache');
             }
 
-            $news = news::onlyTrashed()->with('user', 'category', 'tags')->get();
+            $news = news::onlyTrashed()->with('user', 'category', 'tags')->orderBy('published_at', 'desc')->get();
 
             if ($news->isEmpty()) {
                 return $this->sendResponse([], 'No news found');
@@ -732,6 +729,7 @@ class NewsController
             $news = News::with('user', 'category', 'tags')
                 ->where('is_published', true)
                 ->whereHas('user', fn($query) => $query->where('slug', $slug))
+                ->orderBy('published_at', 'desc')
                 ->get()
                 ->map(fn($news) => [
                     'id' => $news->id,
@@ -764,6 +762,7 @@ class NewsController
             $news = News::with('user', 'category', 'tags')
                 ->where('is_published', true)
                 ->whereHas('category', fn($query) => $query->where('slug', $slug))
+                ->orderBy('published_at', 'desc')
                 ->get()
                 ->map(fn($news) => [
                     'id' => $news->id,
@@ -796,6 +795,7 @@ class NewsController
             $news = News::with('user', 'category', 'tags')
                 ->where('is_published', true)
                 ->whereHas('tags', fn($query) => $query->where('slug', $slug))
+                ->orderBy('published_at', 'desc')
                 ->get()
                 ->map(fn($news) => [
                     'id' => $news->id,

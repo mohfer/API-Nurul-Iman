@@ -25,7 +25,7 @@ class AgendaController
                 return $this->sendResponse($agendas, 'Agenda fetched successfully from cache');
             }
 
-            $agendas = Agenda::select(['id', 'title', 'slug', 'description', 'date', 'created_at'])->get();
+            $agendas = Agenda::select(['id', 'title', 'slug', 'description', 'date', 'created_at'])->orderBy('date', 'desc')->get();
 
             if ($agendas->isEmpty()) {
                 return $this->sendResponse([], 'No agendas found');
@@ -170,7 +170,7 @@ class AgendaController
                 return $this->sendResponse($agendas, 'Agenda fetched successfully from cache');
             }
 
-            $agendas = Agenda::onlyTrashed()->select(['id', 'title', 'slug', 'description', 'date', 'created_at'])->get();
+            $agendas = Agenda::onlyTrashed()->select(['id', 'title', 'slug', 'description', 'date', 'created_at'])->orderBy('date', 'desc')->get();
 
             if ($agendas->isEmpty()) {
                 return $this->sendResponse([], 'No agendas found');

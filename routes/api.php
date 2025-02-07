@@ -16,6 +16,8 @@ use App\Http\Controllers\AnnouncementController;
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 
+    // Check User
+
     // Email Verification
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verificationEmail'])->middleware(['signed'])->name('verification.verify');
@@ -76,7 +78,6 @@ Route::prefix('news')->group(function () {
 
 // Auth and Verified Endpoint
 Route::middleware('auth:sanctum', 'verified')->group(function () {
-
     // User Endpoint
     Route::prefix('users')->group(function () {
         Route::prefix('trashed')->group(function () {

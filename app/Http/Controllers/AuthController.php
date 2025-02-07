@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Traits\GenerateRequestId;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 class AuthController
 {
@@ -46,8 +48,10 @@ class AuthController
 
             if ($request->remember_me) {
                 $token = $user->createToken('auth_token', ['*'], now()->addWeeks(1))->plainTextToken;
+                $cookieExpiration = 10080; // 1 minggu dalam menit
             } else {
                 $token = $user->createToken('auth_token', ['*'], now()->addHours(1))->plainTextToken;
+                $cookieExpiration = 60; // 1 jam dalam menit
             }
 
             $data = [
@@ -57,11 +61,25 @@ class AuthController
                 'permissions' => $user->getAllPermissions()->pluck('name')
             ];
 
+            // Membuat cookie untuk masing-masing data
+            $cookies = [
+                cookie('auth_token', $token, $cookieExpiration),
+                cookie('auth_name', $user->name, $cookieExpiration),
+                cookie('auth_email', $user->email, $cookieExpiration),
+                cookie('auth_roles', json_encode($user->getRoleNames()), $cookieExpiration),
+                cookie('auth_permissions', json_encode($user->getAllPermissions()->pluck('name')), $cookieExpiration)
+            ];
+
             activity('auth')
                 ->event('login')
                 ->log('user logged in');
 
-            return $this->sendResponse($data, 'User logged in successfully');
+            return $this->sendResponse($data, 'User logged in successfully')
+                ->withCookie($cookies[0])
+                ->withCookie($cookies[1])
+                ->withCookie($cookies[2])
+                ->withCookie($cookies[3])
+                ->withCookie($cookies[4]);
         } catch (\Exception $e) {
             $requestId = $this->generateRequestId();
             Log::error($requestId . ' ' . ' Error during login: ' . $e->getMessage());

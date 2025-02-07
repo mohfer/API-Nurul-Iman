@@ -73,6 +73,10 @@ class PermissionSeeder extends Seeder
             }
         }
 
+        Permission::create(['name' => 'dashboard.read']);
+        Permission::create(['name' => 'dashboard.superAdmin']);
+        Permission::create(['name' => 'dashboard.admin']);
+        Permission::create(['name' => 'dashboard.writer']);
         Permission::create(['name' => 'log.read']);
 
         foreach ($roles as $role) {
@@ -86,6 +90,8 @@ class PermissionSeeder extends Seeder
         $superAdmin->syncPermissions(Permission::all());
 
         $adminPermissions = Permission::whereNotIn('name', [
+            'dashboard.superAdmin',
+            'dashboard.writer',
             'role.create',
             'role.read',
             'role.update',
@@ -105,7 +111,7 @@ class PermissionSeeder extends Seeder
         ])->get();
         $admin->syncPermissions($adminPermissions);
 
-        $writer->syncPermissions(['news.create', 'news.read', 'news.update', 'news.delete']);
+        $writer->syncPermissions(['dashboard.read', 'dashboard.writer', 'news.create', 'news.read', 'news.update', 'news.delete']);
 
         User::create([
             'name' => 'Super Admin',

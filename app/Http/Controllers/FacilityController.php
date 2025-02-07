@@ -28,7 +28,7 @@ class FacilityController
                 return $this->sendResponse($facilities, 'facility fetched successfully from cache');
             }
 
-            $facilities = Facility::select(['id', 'title', 'image_url', 'description'])->get();
+            $facilities = Facility::select(['id', 'title', 'image_url', 'description'])->orderBy('title', 'asc')->get();
 
             if ($facilities->isEmpty()) {
                 return $this->sendResponse([], 'No facilities found');
@@ -227,7 +227,7 @@ class FacilityController
                 return $this->sendResponse($facilities, 'facility fetched successfully from cache');
             }
 
-            $facilities = Facility::onlyTrashed()->select(['id', 'title', 'image_url', 'description'])->get();
+            $facilities = Facility::onlyTrashed()->select(['id', 'title', 'image_url', 'description'])->orderBy('title', 'asc')->get();
 
             if ($facilities->isEmpty()) {
                 return $this->sendResponse([], 'No facilities found');

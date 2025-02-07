@@ -27,7 +27,7 @@ class UserController
                 return $this->sendResponse($users, 'User fetched successfully from cache');
             }
 
-            $users = User::select(['id', 'name', 'slug', 'email'])->get();
+            $users = User::select(['id', 'name', 'slug', 'email'])->orderBy('name', 'asc')->get();
 
             if ($users->isEmpty()) {
                 return $this->sendResponse([], 'No users found');
@@ -225,7 +225,7 @@ class UserController
                 return $this->sendResponse($users, 'User fetched successfully from cache');
             }
 
-            $users = User::onlyTrashed()->select(['id', 'name', 'slug', 'email'])->get();
+            $users = User::onlyTrashed()->select(['id', 'name', 'slug', 'email'])->orderBy('name', 'asc')->get();
 
             $usersData = $users->map(function ($user) {
                 return array_merge(['id' => $user->id], $user->only(['name', 'slug', 'email']), [
