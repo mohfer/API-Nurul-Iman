@@ -35,6 +35,7 @@ class DatabaseSeeder extends Seeder
             AgendaSeeder::class,
             FacilitySeeder::class,
             AnnouncementSeeder::class,
+            GallerySeeder::class,
             // UserSeeder::class,
             TagSeeder::class,
         ]);
