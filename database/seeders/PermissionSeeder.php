@@ -106,6 +106,7 @@ class PermissionSeeder extends Seeder
             'tag.forceDelete',
             'gallery.forceDelete',
             'agenda.forceDelete',
+            'facility.forceDelete',
             'announcement.forceDelete',
             'log.read'
         ])->get();

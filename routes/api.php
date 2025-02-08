@@ -16,8 +16,6 @@ use App\Http\Controllers\AnnouncementController;
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 
-    // Check User
-
     // Email Verification
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verificationEmail'])->middleware(['signed'])->name('verification.verify');

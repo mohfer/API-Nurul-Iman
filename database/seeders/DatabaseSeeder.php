@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             CategorySeeder::class,
             AgendaSeeder::class,
+            FacilitySeeder::class,
             // UserSeeder::class,
             TagSeeder::class,
         ]);

@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Redis;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Validator;
 use Yaza\LaravelGoogleDriveStorage\Gdrive;
+use Google\Client;
+use Google\Service\Drive;
+use Google\Service\Drive\Permission;
 
 class GalleryController
 {
@@ -71,6 +74,26 @@ class GalleryController
             if (!$fileMetadata) {
                 throw new \Exception("The metadata file was not found in Google Drive.");
             }
+
+            // Setup Google Client untuk mengubah permission
+            $client = new Client();
+            $client->setClientId(config('filesystems.disks.google.clientId'));
+            $client->setClientSecret(config('filesystems.disks.google.clientSecret'));
+            $client->refreshToken(config('filesystems.disks.google.refreshToken'));
+
+            $service = new Drive($client);
+
+            // Buat permission baru (public)
+            $permission = new Permission();
+            $permission->setRole('reader');
+            $permission->setType('anyone');
+
+            // Terapkan permission ke file
+            $service->permissions->create(
+                $fileMetadata['extra_metadata']['id'],
+                $permission,
+                ['fields' => 'id']
+            );
 
             $thumbnailUrl = env('GOOGLE_DRIVE_URL') . $fileMetadata['extra_metadata']['id'];
 
@@ -163,6 +186,26 @@ class GalleryController
                 if (!$newFileMetadata) {
                     throw new \Exception("Failed to get the metadata of the newly uploaded file.");
                 }
+
+                // Setup Google Client untuk mengubah permission
+                $client = new Client();
+                $client->setClientId(config('filesystems.disks.google.clientId'));
+                $client->setClientSecret(config('filesystems.disks.google.clientSecret'));
+                $client->refreshToken(config('filesystems.disks.google.refreshToken'));
+
+                $service = new Drive($client);
+
+                // Buat permission baru (public)
+                $permission = new Permission();
+                $permission->setRole('reader');
+                $permission->setType('anyone');
+
+                // Terapkan permission ke file
+                $service->permissions->create(
+                    $newFileMetadata['extra_metadata']['id'],
+                    $permission,
+                    ['fields' => 'id']
+                );
 
                 $gallery->image_url = env('GOOGLE_DRIVE_URL') . $newFileMetadata['extra_metadata']['id'];
                 $gallery->image_name = $newFileName;
