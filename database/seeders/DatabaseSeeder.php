@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             AgendaSeeder::class,
             FacilitySeeder::class,
+            AnnouncementSeeder::class,
             // UserSeeder::class,
             TagSeeder::class,
         ]);
