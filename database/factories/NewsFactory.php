@@ -20,12 +20,12 @@ class NewsFactory extends Factory
     {
         return [
             'title' => $this->faker->sentence(),
-            'image_url' => $this->faker->imageUrl(),
+            'image_url' => 'https://placehold.co/800x600/png',
             'image_name' => $this->faker->word(),
             'content' => $this->faker->paragraph(10),
             'user_id' => User::factory(),
             'category_id' => Category::factory(),
-            'is_published' => true,
+            'is_published' => $this->faker->boolean(),
             'published_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
         ];
     }

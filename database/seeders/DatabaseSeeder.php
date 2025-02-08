@@ -18,26 +18,29 @@ class DatabaseSeeder extends Seeder
     {
         activity()->disableLogging();
 
-        // $tags = Tag::factory()->count(10)->create();
+        $this->call([
+            CategorySeeder::class,
+            TagSeeder::class,
+        ]);
 
-        // User::factory()->count(5)->create()->each(function ($user) use ($tags) {
-        //     News::factory()->count(3)->create([
-        //         'user_id' => $user->id,
-        //         'category_id' => Category::factory()->create()->id,
-        //     ])->each(function ($news) use ($tags) {
-        //         $news->tags()->attach($tags->random(3));
-        //     });
-        // });
+        $tags = Tag::all();
+        $categories = Category::all();
+
+        User::factory()->count(5)->create()->each(function ($user) use ($tags, $categories) {
+            News::factory()->count(3)->create([
+                'user_id' => $user->id,
+                'category_id' => $categories->random()->id,
+            ])->each(function ($news) use ($tags) {
+                $news->tags()->attach($tags->random(3));
+            });
+        });
 
         $this->call([
             PermissionSeeder::class,
-            CategorySeeder::class,
             AgendaSeeder::class,
             FacilitySeeder::class,
             AnnouncementSeeder::class,
             GallerySeeder::class,
-            // UserSeeder::class,
-            TagSeeder::class,
         ]);
 
         // News::factory(10)->create();
