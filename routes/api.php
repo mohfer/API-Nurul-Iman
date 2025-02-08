@@ -11,6 +11,23 @@ use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\AnnouncementController;
+use Illuminate\Support\Facades\Redis;
+
+// Redis Flush
+Route::get('/redis/flush', function () {
+    try {
+        Redis::command('flushall');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Redis cache berhasil dibersihkan'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Gagal membersihkan Redis cache: ' . $e->getMessage()
+        ], 500);
+    }
+});
 
 // Auth Endpoint
 Route::prefix('auth')->group(function () {
