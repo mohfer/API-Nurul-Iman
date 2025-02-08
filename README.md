@@ -1,1 +1,1 @@
-# Yes, I'm still using PHP :) PHP is cool, right?
+Backend API Laravel untuk mengelola data di nurulimankasemen.sch.id, menyediakan endpoint untuk konten sekolah seperti berita, kegiatan, dan galeri.
