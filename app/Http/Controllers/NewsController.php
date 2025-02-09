@@ -39,12 +39,12 @@ class NewsController
                     'id' => $news->id,
                     'title' => Str::limit($news->title, 20),
                     'slug' => $news->slug,
-                    'image_url' => $news->image_url,
+                    'image_url' => $news->image_url ?? null,
                     'content' => Str::limit($news->content, 50),
                     'is_published' => $news->is_published ? 'Published' : 'Draft',
                     'published_at' => $news->published_at ?? null,
                     'author' => $news->user->name,
-                    'category' => $news->category->category,
+                    'category' => $news->category->category ?? null,
                     'tags' => $news->tags->pluck('tag')->toArray(),
                 ]);
 
@@ -66,7 +66,7 @@ class NewsController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+                'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
                 'title' => 'required|string',
                 'content' => 'required|string',
                 'category_id' => 'required|string|exists:categories,id',
@@ -141,9 +141,9 @@ class NewsController
                 'image_url' => $news->image_url ?? null,
                 'content' => Str::limit($news->content, 50),
                 'is_published' => $news->is_published ? 'Published' : 'Draft',
-                'published_at' => $news->published_at,
+                'published_at' => $news->published_at ?? null,
                 'author' => $news->user->name,
-                'category' => $news->category->category,
+                'category' => $news->category->category ?? null,
                 'tags' => $news->tags->pluck('tag')->toArray(),
             ];
 
@@ -177,11 +177,11 @@ class NewsController
                 'title' => $news->title,
                 'slug' => $news->slug,
                 'image_url' => $news->image_url ?? null,
-                'content' => $news->content,
+                'content' => $news->content ?? null,
                 'is_published' => $news->is_published ? 'Published' : 'Draft',
-                'published_at' => $news->published_at,
+                'published_at' => $news->published_at ?? null,
                 'author' => $news->user->name,
-                'category' => $news->category->category,
+                'category' => $news->category->category ?? null,
                 'tags' => $news->tags->pluck('tag')->toArray(),
             ];
 
@@ -203,7 +203,7 @@ class NewsController
             }
 
             $validator = Validator::make($request->all(), [
-                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'title' => 'required|string',
                 'content' => 'required|string',
                 'category_id' => 'required|string|exists:categories,id',
@@ -286,11 +286,11 @@ class NewsController
                 'title' => $news->title,
                 'slug' => $news->slug,
                 'image_url' => $news->image_url ?? null,
-                'content' => $news->content,
+                'content' => $news->content ?? null,
                 'is_published' => $news->is_published ? 'Published' : 'Draft',
-                'published_at' => $news->published_at,
+                'published_at' => $news->published_at ?? null,
                 'author' => $news->user->name,
-                'category' => $news->category->category,
+                'category' => $news->category->category ?? null,
                 'tags' => $news->tags->pluck('tag')->toArray(),
             ];
 
@@ -326,11 +326,11 @@ class NewsController
                 'title' => $news->title,
                 'slug' => $news->slug,
                 'image_url' => $news->image_url ?? null,
-                'content' => $news->content,
+                'content' => $news->content ?? null,
                 'is_published' => $news->is_published ? 'Published' : 'Draft',
-                'published_at' => $news->published_at,
+                'published_at' => $news->published_at ?? null,
                 'author' => $news->user->name,
-                'category' => $news->category->category,
+                'category' => $news->category->category ?? null,
                 'tags' => $news->tags->pluck('tag')->toArray(),
             ];
 
@@ -371,11 +371,11 @@ class NewsController
                     'title' => $news->title,
                     'slug' => $news->slug,
                     'image_url' => $news->image_url ?? null,
-                    'content' => $news->content,
+                    'content' => $news->content ?? null,
                     'is_published' => $news->is_published ? 'Published' : 'Draft',
-                    'published_at' => $news->published_at,
+                    'published_at' => $news->published_at ?? null,
                     'author' => $news->user->name,
-                    'category' => $news->category->category,
+                    'category' => $news->category->category ?? null,
                     'tags' => $news->tags->pluck('tag')->toArray(),
                 ];
             });
@@ -406,11 +406,11 @@ class NewsController
                 'title' => $news->title,
                 'slug' => $news->slug,
                 'image_url' => $news->image_url ?? null,
-                'content' => $news->content,
+                'content' => $news->content ?? null,
                 'is_published' => $news->is_published ? 'Published' : 'Draft',
-                'published_at' => $news->published_at,
+                'published_at' => $news->published_at ?? null,
                 'author' => $news->user->name,
-                'category' => $news->category->category,
+                'category' => $news->category->category ?? null,
                 'tags' => $news->tags->pluck('tag')->toArray(),
             ];
 
@@ -456,11 +456,11 @@ class NewsController
                 'title' => $news->title,
                 'slug' => $news->slug,
                 'image_url' => $news->image_url ?? null,
-                'content' => $news->content,
+                'content' => $news->content ?? null,
                 'is_published' => $news->is_published ? 'Published' : 'Draft',
-                'published_at' => $news->published_at,
+                'published_at' => $news->published_at ?? null,
                 'author' => $news->user->name,
-                'category' => $news->category->category,
+                'category' => $news->category->category ?? null,
                 'tags' => $news->tags->pluck('tag')->toArray(),
             ];
 
@@ -503,9 +503,9 @@ class NewsController
                         'image_url' => $news->image_url ?? null,
                         'content' => Str::limit($news->content, 50),
                         'is_published' => $news->is_published ? 'Published' : 'Draft',
-                        'published_at' => $news->published_at,
+                        'published_at' => $news->published_at ?? null,
                         'author' => $news->user->name,
-                        'category' => $news->category->category,
+                        'category' => $news->category->category ?? null,
                         'tags' => $news->tags->pluck('tag')->toArray(),
                     ];
                 });
@@ -531,9 +531,9 @@ class NewsController
                     'image_url' => $news->image_url ?? null,
                     'content' => Str::limit($news->content, 50),
                     'is_published' => $news->is_published ? 'Published' : 'Draft',
-                    'published_at' => $news->published_at,
+                    'published_at' => $news->published_at ?? null,
                     'author' => $news->user->name,
-                    'category' => $news->category->category,
+                    'category' => $news->category->category ?? null,
                     'tags' => $news->tags->pluck('tag')->toArray(),
                 ];
             });
@@ -550,10 +550,10 @@ class NewsController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'title' => 'required|string',
-                'content' => 'required|string',
-                'category_id' => 'required|string|exists:categories,id',
+                'content' => 'nullable|string',
+                'category_id' => 'nullable|string|exists:categories,id',
                 'tags' => 'nullable|array',
                 'tags.*' => 'exists:tags,id',
             ]);
@@ -605,9 +605,9 @@ class NewsController
                 'title' => $request->title,
                 'image_url' => $thumbnailUrl ?? null,
                 'image_name' => $fileName ?? null,
-                'content' => $request->content,
+                'content' => $request->content ?? null,
                 'user_id' => $request->user()->id,
-                'category_id' => $request->category_id,
+                'category_id' => $request->category_id ?? null,
                 'is_published' => false,
                 'published_at' => null,
             ]);
@@ -625,9 +625,9 @@ class NewsController
                 'image_url' => $news->image_url ?? null,
                 'content' => Str::limit($news->content, 50),
                 'is_published' => $news->is_published ? 'Published' : 'Draft',
-                'published_at' => $news->published_at,
+                'published_at' => $news->published_at ?? null,
                 'author' => $news->user->name,
-                'category' => $news->category->category,
+                'category' => $news->category->category ?? null,
                 'tags' => $news->tags->pluck('tag')->toArray(),
             ];
 
@@ -663,12 +663,12 @@ class NewsController
                     'id' => $news->id,
                     'title' => Str::limit($news->title, 20),
                     'slug' => $news->slug,
-                    'image_url' => $news->image_url,
+                    'image_url' => $news->image_url ?? null,
                     'content' => Str::limit($news->content, 50),
                     'is_published' => $news->is_published ? 'Draft' : 'Published',
-                    'published_at' => $news->published_at,
+                    'published_at' => $news->published_at ?? null,
                     'author' => $news->user->name,
-                    'category' => $news->category->category,
+                    'category' => $news->category->category ?? null,
                     'tags' => $news->tags->pluck('tag')->toArray(),
                 ]);
 
@@ -698,7 +698,7 @@ class NewsController
             }
 
             $validator = Validator::make($request->all(), [
-                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+                'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
                 'title' => 'required|string',
                 'content' => 'required|string',
                 'category_id' => 'required|string|exists:categories,id',
@@ -783,11 +783,11 @@ class NewsController
                 'title' => $news->title,
                 'slug' => $news->slug,
                 'image_url' => $news->image_url ?? null,
-                'content' => $news->content,
+                'content' => $news->content ?? null,
                 'is_published' => $news->is_published ? 'Published' : 'Draft',
-                'published_at' => $news->published_at,
+                'published_at' => $news->published_at ?? null,
                 'author' => $news->user->name,
-                'category' => $news->category->category,
+                'category' => $news->category->category ?? null,
                 'tags' => $news->tags->pluck('tag')->toArray(),
             ];
 
@@ -818,12 +818,12 @@ class NewsController
                     'id' => $news->id,
                     'title' => Str::limit($news->title, 20),
                     'slug' => $news->slug,
-                    'image_url' => $news->image_url,
+                    'image_url' => $news->image_url ?? null,
                     'content' => Str::limit($news->content, 50),
                     'is_published' => $news->is_published ? 'Published' : 'Draft',
-                    'published_at' => $news->published_at,
+                    'published_at' => $news->published_at ?? null,
                     'author' => $news->user->name,
-                    'category' => $news->category->category,
+                    'category' => $news->category->category ?? null,
                     'tags' => $news->tags->pluck('tag')->toArray(),
                 ]);
 
@@ -851,12 +851,12 @@ class NewsController
                     'id' => $news->id,
                     'title' => Str::limit($news->title, 20),
                     'slug' => $news->slug,
-                    'image_url' => $news->image_url,
+                    'image_url' => $news->image_url ?? null,
                     'content' => Str::limit($news->content, 50),
                     'is_published' => $news->is_published ? 'Published' : 'Draft',
-                    'published_at' => $news->published_at,
+                    'published_at' => $news->published_at ?? null,
                     'author' => $news->user->name,
-                    'category' => $news->category->category,
+                    'category' => $news->category->category ?? null,
                     'tags' => $news->tags->pluck('tag')->toArray(),
                 ]);
 
@@ -884,12 +884,12 @@ class NewsController
                     'id' => $news->id,
                     'title' => Str::limit($news->title, 20),
                     'slug' => $news->slug,
-                    'image_url' => $news->image_url,
+                    'image_url' => $news->image_url ?? null,
                     'content' => Str::limit($news->content, 50),
                     'is_published' => $news->is_published ? 'Published' : 'Draft',
-                    'published_at' => $news->published_at,
+                    'published_at' => $news->published_at ?? null,
                     'author' => $news->user->name,
-                    'category' => $news->category->category,
+                    'category' => $news->category->category ?? null,
                     'tags' => $news->tags->pluck('tag')->toArray(),
                 ]);
 
@@ -916,12 +916,12 @@ class NewsController
                     'id' => $news->id,
                     'title' => $news->title,
                     'slug' => $news->slug,
-                    'image_url' => $news->image_url,
-                    'content' => $news->content,
+                    'image_url' => $news->image_url ?? null,
+                    'content' => $news->content ?? null,
                     'is_published' => $news->is_published ? 'Published' : 'Draft',
-                    'published_at' => $news->published_at,
+                    'published_at' => $news->published_at ?? null,
                     'author' => $news->user->name,
-                    'category' => $news->category->category,
+                    'category' => $news->category->category ?? null,
                     'tags' => $news->tags->pluck('tag')->toArray(),
                 ]);
 

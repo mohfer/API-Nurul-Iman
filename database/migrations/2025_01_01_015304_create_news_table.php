@@ -17,9 +17,9 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->string('image_url')->nullable();
             $table->string('image_name')->nullable();
-            $table->text('content');
+            $table->text('content')->nullable();
             $table->foreignUuid('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreignUuid('category_id')->references('id')->on('categories')->onDelete('cascade');
+            $table->foreignUuid('category_id')->nullable()->references('id')->on('categories')->onDelete('cascade');
             $table->string('is_published');
             $table->dateTime('published_at')->nullable();
             $table->timestamps();
