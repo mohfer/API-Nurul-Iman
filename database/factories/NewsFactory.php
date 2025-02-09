@@ -18,6 +18,8 @@ class NewsFactory extends Factory
      */
     public function definition(): array
     {
+        $isPublished = $this->faker->boolean();
+
         return [
             'title' => $this->faker->sentence(),
             'image_url' => 'https://placehold.co/800x600/png',
@@ -25,8 +27,8 @@ class NewsFactory extends Factory
             'content' => $this->faker->paragraph(10),
             'user_id' => User::factory(),
             'category_id' => Category::factory(),
-            'is_published' => $this->faker->boolean(),
-            'published_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
+            'is_published' => $isPublished,
+            'published_at' => $isPublished ? $this->faker->dateTimeBetween('-1 year', 'now') : null,
         ];
     }
 }

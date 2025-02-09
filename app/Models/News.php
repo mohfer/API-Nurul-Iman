@@ -76,11 +76,11 @@ class News extends Model
 
     public function getPublishedAtAttribute($value)
     {
-        return Carbon::parse($value)->translatedFormat('d F Y');
+        return $value ? Carbon::parse($value)->translatedFormat('d F Y') : null;
     }
 
     public function getCreatedAtAttribute($value)
     {
-        return Carbon::parse($value)->translatedFormat('d F Y');
+        return $value ? Carbon::parse($value)->translatedFormat('d F Y') : null;
     }
 }

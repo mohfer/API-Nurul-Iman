@@ -32,8 +32,8 @@ class NewsController
             }
 
             $newsData = News::with('user', 'category', 'tags')
-                ->where('is_published', true)
-                ->orderBy('published_at', 'desc')
+                // ->where('is_published', true)
+                ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(fn($news) => [
                     'id' => $news->id,
@@ -41,8 +41,8 @@ class NewsController
                     'slug' => $news->slug,
                     'image_url' => $news->image_url,
                     'content' => Str::limit($news->content, 50),
-                    'is_published' => $news->is_published,
-                    'published_at' => $news->published_at,
+                    'is_published' => $news->is_published ? 'Published' : 'Draft',
+                    'published_at' => $news->published_at ?? null,
                     'author' => $news->user->name,
                     'category' => $news->category->category,
                     'tags' => $news->tags->pluck('tag')->toArray(),
@@ -140,7 +140,7 @@ class NewsController
                 'slug' => $news->slug,
                 'image_url' => $news->image_url ?? null,
                 'content' => Str::limit($news->content, 50),
-                'is_published' => $news->is_published,
+                'is_published' => $news->is_published ? 'Published' : 'Draft',
                 'published_at' => $news->published_at,
                 'author' => $news->user->name,
                 'category' => $news->category->category,
@@ -178,7 +178,7 @@ class NewsController
                 'slug' => $news->slug,
                 'image_url' => $news->image_url ?? null,
                 'content' => $news->content,
-                'is_published' => $news->is_published,
+                'is_published' => $news->is_published ? 'Published' : 'Draft',
                 'published_at' => $news->published_at,
                 'author' => $news->user->name,
                 'category' => $news->category->category,
@@ -287,7 +287,7 @@ class NewsController
                 'slug' => $news->slug,
                 'image_url' => $news->image_url ?? null,
                 'content' => $news->content,
-                'is_published' => $news->is_published,
+                'is_published' => $news->is_published ? 'Published' : 'Draft',
                 'published_at' => $news->published_at,
                 'author' => $news->user->name,
                 'category' => $news->category->category,
@@ -327,7 +327,7 @@ class NewsController
                 'slug' => $news->slug,
                 'image_url' => $news->image_url ?? null,
                 'content' => $news->content,
-                'is_published' => $news->is_published,
+                'is_published' => $news->is_published ? 'Published' : 'Draft',
                 'published_at' => $news->published_at,
                 'author' => $news->user->name,
                 'category' => $news->category->category,
@@ -359,7 +359,7 @@ class NewsController
                 return $this->sendResponse($news, 'news fetched successfully from cache');
             }
 
-            $news = news::onlyTrashed()->with('user', 'category', 'tags')->orderBy('published_at', 'desc')->get();
+            $news = News::onlyTrashed()->with('user', 'category', 'tags')->orderBy('published_at', 'desc')->get();
 
             if ($news->isEmpty()) {
                 return $this->sendResponse([], 'No news found');
@@ -372,7 +372,7 @@ class NewsController
                     'slug' => $news->slug,
                     'image_url' => $news->image_url ?? null,
                     'content' => $news->content,
-                    'is_published' => $news->is_published,
+                    'is_published' => $news->is_published ? 'Published' : 'Draft',
                     'published_at' => $news->published_at,
                     'author' => $news->user->name,
                     'category' => $news->category->category,
@@ -380,7 +380,7 @@ class NewsController
                 ];
             });
 
-            Redis::setex('news.trashed', 3600, json_encode($news));
+            Redis::setex('news.trashed', 3600, json_encode($data));
 
             return $this->sendResponse($data, 'news fetched successfully');
         } catch (\Exception $e) {
@@ -407,7 +407,7 @@ class NewsController
                 'slug' => $news->slug,
                 'image_url' => $news->image_url ?? null,
                 'content' => $news->content,
-                'is_published' => $news->is_published,
+                'is_published' => $news->is_published ? 'Published' : 'Draft',
                 'published_at' => $news->published_at,
                 'author' => $news->user->name,
                 'category' => $news->category->category,
@@ -457,7 +457,7 @@ class NewsController
                 'slug' => $news->slug,
                 'image_url' => $news->image_url ?? null,
                 'content' => $news->content,
-                'is_published' => $news->is_published,
+                'is_published' => $news->is_published ? 'Published' : 'Draft',
                 'published_at' => $news->published_at,
                 'author' => $news->user->name,
                 'category' => $news->category->category,
@@ -502,7 +502,7 @@ class NewsController
                         'slug' => $news->slug,
                         'image_url' => $news->image_url ?? null,
                         'content' => Str::limit($news->content, 50),
-                        'is_published' => $news->is_published,
+                        'is_published' => $news->is_published ? 'Published' : 'Draft',
                         'published_at' => $news->published_at,
                         'author' => $news->user->name,
                         'category' => $news->category->category,
@@ -530,7 +530,7 @@ class NewsController
                     'slug' => $news->slug,
                     'image_url' => $news->image_url ?? null,
                     'content' => Str::limit($news->content, 50),
-                    'is_published' => $news->is_published,
+                    'is_published' => $news->is_published ? 'Published' : 'Draft',
                     'published_at' => $news->published_at,
                     'author' => $news->user->name,
                     'category' => $news->category->category,
@@ -624,7 +624,7 @@ class NewsController
                 'slug' => $news->slug,
                 'image_url' => $news->image_url ?? null,
                 'content' => Str::limit($news->content, 50),
-                'is_published' => $news->is_published,
+                'is_published' => $news->is_published ? 'Published' : 'Draft',
                 'published_at' => $news->published_at,
                 'author' => $news->user->name,
                 'category' => $news->category->category,
@@ -665,7 +665,7 @@ class NewsController
                     'slug' => $news->slug,
                     'image_url' => $news->image_url,
                     'content' => Str::limit($news->content, 50),
-                    'is_published' => $news->is_published,
+                    'is_published' => $news->is_published ? 'Draft' : 'Published',
                     'published_at' => $news->published_at,
                     'author' => $news->user->name,
                     'category' => $news->category->category,
@@ -784,7 +784,7 @@ class NewsController
                 'slug' => $news->slug,
                 'image_url' => $news->image_url ?? null,
                 'content' => $news->content,
-                'is_published' => $news->is_published,
+                'is_published' => $news->is_published ? 'Published' : 'Draft',
                 'published_at' => $news->published_at,
                 'author' => $news->user->name,
                 'category' => $news->category->category,
@@ -820,7 +820,7 @@ class NewsController
                     'slug' => $news->slug,
                     'image_url' => $news->image_url,
                     'content' => Str::limit($news->content, 50),
-                    'is_published' => $news->is_published,
+                    'is_published' => $news->is_published ? 'Published' : 'Draft',
                     'published_at' => $news->published_at,
                     'author' => $news->user->name,
                     'category' => $news->category->category,
@@ -853,7 +853,7 @@ class NewsController
                     'slug' => $news->slug,
                     'image_url' => $news->image_url,
                     'content' => Str::limit($news->content, 50),
-                    'is_published' => $news->is_published,
+                    'is_published' => $news->is_published ? 'Published' : 'Draft',
                     'published_at' => $news->published_at,
                     'author' => $news->user->name,
                     'category' => $news->category->category,
@@ -886,7 +886,7 @@ class NewsController
                     'slug' => $news->slug,
                     'image_url' => $news->image_url,
                     'content' => Str::limit($news->content, 50),
-                    'is_published' => $news->is_published,
+                    'is_published' => $news->is_published ? 'Published' : 'Draft',
                     'published_at' => $news->published_at,
                     'author' => $news->user->name,
                     'category' => $news->category->category,
@@ -918,7 +918,7 @@ class NewsController
                     'slug' => $news->slug,
                     'image_url' => $news->image_url,
                     'content' => $news->content,
-                    'is_published' => $news->is_published,
+                    'is_published' => $news->is_published ? 'Published' : 'Draft',
                     'published_at' => $news->published_at,
                     'author' => $news->user->name,
                     'category' => $news->category->category,
